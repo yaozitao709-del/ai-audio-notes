@@ -72,7 +72,7 @@ test('oversized or dense changes do not rewrite the source', () => {
 test('proofreading cannot erase repetitions or guess personal names through a typo label', () => {
   const text='原来的语气和前后顺序都需要保留。'.repeat(4)+'这位新新学员已经表示想想想要参与演练，我们需要保留他的完整说法，后面甲某就不来。';
   const [chunk]=createProofreadingChunks([line(text)]);const id=chunk.body[0].id;
-  const result=applyProofreadingEdits(chunk,responseFor(chunk,[edit(id,'新新客户','新客户'),edit(id,'想想想要来学','想要来学'),{...edit(id,'后面甲某就不来','后面乙某就不来'),reason:'根据上下文统一人名'}]));
+  const result=applyProofreadingEdits(chunk,responseFor(chunk,[edit(id,'新新学员','新学员'),edit(id,'想想想要参与演练','想要参与演练'),{...edit(id,'后面甲某就不来','后面乙某就不来'),reason:'根据上下文统一人名'}]));
   assert.equal(result.segments[0].text,text);assert.equal(result.applied.length,0);
 });
 
