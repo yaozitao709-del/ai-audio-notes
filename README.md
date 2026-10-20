@@ -2,6 +2,22 @@
 
 适用于苹果芯片 Mac 的本地录音纪要工具。中文/英文 Paraformer 快速转写，AI 结合上下文校对和轻度整理完整文字，再根据保存的完整成稿生成总结与章节。
 
+## 产品预览
+
+以下为发布版界面的真实截图，文字为专门编写的演示数据；不含个人录音、历史笔记或 API 密钥。首次使用时笔记列表为空。
+
+**导入音频，或直接开始录音。** 首页集中管理笔记，右上角进入 AI 设置。
+
+![首页：音频导入、录音入口与笔记列表](docs/images/home.jpg)
+
+**左侧读全文，右侧看重点。** 全文经 AI 校对和轻度整理后，再生成总结与章节；支持查找、编辑、回听定位和导出。
+
+![纪要详情：校对后的全文、总结概要与音频控制](docs/images/transcript-summary.jpg)
+
+**使用自己的 AI 服务。** 填写密钥即可测试并保存；展开高级设置可修改 API 地址、获取可用模型列表或手动填写模型名称。
+
+![AI 设置：服务选择、密钥输入与连接测试](docs/images/ai-settings.jpg)
+
 ## 普通用户下载
 
 到 [Releases](https://github.com/yaozitao709-del/ai-audio-notes/releases/latest) 下载 **AI-Audio-Notes-v0.1.0-macos-arm64.zip**，不要下载 GitHub 自动生成的 Source code ZIP 来当安装包。
