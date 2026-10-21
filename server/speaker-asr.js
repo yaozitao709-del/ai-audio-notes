@@ -15,7 +15,7 @@ export class SpeakerAsr {
     const started=performance.now();const folder=await fs.mkdtemp(path.join(os.tmpdir(),'audio-speakers-'));const wav=path.join(folder,'audio.wav');
     try{
       await new Promise((resolve,reject)=>{
-        const child=spawn(ffmpegPath,['-v','error','-nostdin','-i',audioPath,'-vn','-ac','1','-ar','16000','-c:a','pcm_s16le',wav]);
+        const child=spawn(ffmpegPath,['-v','error','-nostdin','-i',audioPath,'-vn','-ac','1','-ar','16000','-c:a','pcm_s16le',wav],{windowsHide:true});
         child.stderr.on('data',()=>{});child.on('error',reject);child.on('close',code=>code===0?resolve():reject(new Error('分人音频解码失败，请检查音频文件。')));
       });
       options.onProgress?.({stage:'diarizing'});

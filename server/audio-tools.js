@@ -7,7 +7,7 @@ export const ffprobePath = process.env.FFPROBE_PATH || require("@ffprobe-install
 
 export async function probeAudioDuration(audioPath, { decodeIfUnknown = true } = {}) {
   const duration = await new Promise((resolve, reject) => {
-    const child = spawn(ffprobePath, ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", audioPath]);
+    const child = spawn(ffprobePath, ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", audioPath],{windowsHide:true});
     let out = "", error = "";
     child.stdout.on("data", data => { out += data; });
     child.stderr.on("data", data => { error = (error + data).slice(-3000); });
@@ -21,7 +21,7 @@ export async function probeAudioDuration(audioPath, { decodeIfUnknown = true } =
 // Stream decoded PCM; backpressure from synchronous recognition keeps memory bounded.
 export async function streamAudio(audioPath, onSamples) {
   return new Promise((resolve, reject) => {
-    const child = spawn(ffmpegPath, ["-v", "error", "-nostdin", "-i", audioPath, "-vn", "-ac", "1", "-ar", "16000", "-f", "f32le", "pipe:1"]);
+    const child = spawn(ffmpegPath, ["-v", "error", "-nostdin", "-i", audioPath, "-vn", "-ac", "1", "-ar", "16000", "-f", "f32le", "pipe:1"],{windowsHide:true});
     let remaining = Buffer.alloc(0), error = "", sampleCount = 0, failed = false;
     child.stderr.on("data", data => { error = (error + data).slice(-3000); });
     child.stdout.on("data", data => {
