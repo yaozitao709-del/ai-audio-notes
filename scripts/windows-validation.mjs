@@ -11,7 +11,7 @@ await run(process.execPath,['scripts/windows-python-scenarios.mjs',work,app],{en
 await run(process.execPath,['scripts/download-models.mjs','--test'],{env,inherit:true});
 await run(process.execPath,['scripts/download-speaker-models.mjs','--test'],{env,inherit:true});
 const examples=path.join(prepared.models.SPEAKER_MODEL_ROOT,'speech_campplus_sv_zh-cn_16k-common/examples');
-await run(env.FFMPEG_PATH,['-v','error','-y',...['speaker1_a','speaker2_a','speaker1_b'].flatMap(n=>['-i',path.join(examples,n+'_cn_16k.wav')]),'-filter_complex','[0:a]apad=pad_dur=0.4[a];[1:a]apad=pad_dur=0.4[b];[a][b][2:a]concat=n=3:v=0:a=1[out]','-map','[out]','-ac','1','-ar','16000',path.join(work,'public-aba.wav')],{env});
+await run(env.FFMPEG_PATH,['-v','error','-y',...['speaker1_a','speaker2_a','speaker1_b'].flatMap(n=>['-i',path.join(examples,n+'_cn_16k.wav')]),'-filter_complex','[0:a]apad=pad_len=6400[a];[1:a]apad=pad_len=6400[b];[a][b][2:a]concat=n=3:v=0:a=1[out]','-map','[out]','-ac','1','-ar','16000',path.join(work,'public-aba.wav')],{env});
 await run(process.execPath,['--test','--test-concurrency=1','server/*.test.js'],{env,inherit:true,timeout:1200000});
 await run(process.execPath,['scripts/windows-acceptance.mjs',work,'lite',app],{env,inherit:true,timeout:1200000});
 console.log('Windows lite cold install, repeat reuse, all server tests and packaged acceptance passed.');

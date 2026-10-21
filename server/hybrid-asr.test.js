@@ -17,7 +17,7 @@ test("hybrid recognizes A/B/A voices with Paraformer and reuses only VAD/CAM++",
   t.after(async () => { await engine.close(); await fs.rm(dir, { force: true, recursive: true }); });
   const audio = path.join(dir, "a-b-a.wav");
   const concat = spawnSync(ffmpegPath, ["-v", "error", "-y", "-i", sample("speaker1_a"), "-i", sample("speaker2_a"), "-i", sample("speaker1_b"),
-    "-filter_complex", "[0:a]apad=pad_dur=0.4[a0];[1:a]apad=pad_dur=0.4[a1];[a0][a1][2:a]concat=n=3:v=0:a=1[out]", "-map", "[out]", "-ac", "1", "-ar", "16000", audio]);
+    "-filter_complex", "[0:a]apad=pad_len=6400[a0];[1:a]apad=pad_len=6400[a1];[a0][a1][2:a]concat=n=3:v=0:a=1[out]", "-map", "[out]", "-ac", "1", "-ar", "16000", audio]);
   assert.equal(concat.status, 0, concat.stderr.toString());
   const result = await engine.transcribeFile(audio);
   assert.match(result.model, /Paraformer.*CAM/);

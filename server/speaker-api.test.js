@@ -13,7 +13,7 @@ test('speaker API runs real audio clustering for imports/live/reprocessing and e
   const folder=await fs.mkdtemp(path.join(os.tmpdir(),'speaker-api-'));
   const examples=path.join(process.env.SPEAKER_MODEL_ROOT || path.resolve('models/speakers'),'speech_campplus_sv_zh-cn_16k-common/examples');
   const audio=path.join(folder,'aba.wav');
-  const concat=spawnSync(ffmpegPath,['-v','error','-y','-i',path.join(examples,'speaker1_a_cn_16k.wav'),'-i',path.join(examples,'speaker2_a_cn_16k.wav'),'-i',path.join(examples,'speaker1_b_cn_16k.wav'),'-filter_complex','[0:a]apad=pad_dur=0.4[a];[1:a]apad=pad_dur=0.4[b];[a][b][2:a]concat=n=3:v=0:a=1[out]','-map','[out]','-ar','16000','-ac','1',audio]);
+  const concat=spawnSync(ffmpegPath,['-v','error','-y','-i',path.join(examples,'speaker1_a_cn_16k.wav'),'-i',path.join(examples,'speaker2_a_cn_16k.wav'),'-i',path.join(examples,'speaker1_b_cn_16k.wav'),'-filter_complex','[0:a]apad=pad_len=6400[a];[1:a]apad=pad_len=6400[b];[a][b][2:a]concat=n=3:v=0:a=1[out]','-map','[out]','-ar','16000','-ac','1',audio]);
   assert.equal(concat.status,0,concat.stderr.toString());
   let summaries=0;
   const ai=http.createServer(async(req,res)=>{
