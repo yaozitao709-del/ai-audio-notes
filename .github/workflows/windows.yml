@@ -47,6 +47,7 @@ jobs:
       - name: Cold lite installation through double-click launcher
         shell: pwsh
         run: |
+          $env:AI_AUDIO_ISOLATED_PYTHON='1'
           $env:AI_AUDIO_CACHE_DIR=Join-Path $env:WIN_TEST_ROOT 'cold-cache'
           $env:AI_AUDIO_DATA_ROOT=Join-Path $env:WIN_TEST_ROOT 'cold-data'
           $env:PATH="$env:SystemRoot;$env:SystemRoot\System32"
@@ -76,9 +77,11 @@ jobs:
           Move-Item -LiteralPath (Join-Path $env:WIN_TEST_ROOT '搬家 Full package') -Destination (Join-Path $env:WIN_TEST_ROOT 'AI-Audio-Notes')
           # Lite's installed junction must never include downloaded dependencies.
           Remove-Item -LiteralPath (Join-Path $env:WIN_TEST_ROOT 'AI-Audio-Notes-Lite\node_modules\sherpa-onnx-win-x64') -Force
+          foreach($tool in @('ffmpeg','ffprobe')) { Remove-Item -LiteralPath (Join-Path $env:WIN_TEST_ROOT "AI-Audio-Notes\node_modules\@$tool-installer\win32-x64") -Recurse -Force -ErrorAction SilentlyContinue }
+          Set-Location -LiteralPath $env:WIN_TEST_ROOT
           foreach($variant in @('lite','full')) {
             $folder=if($variant -eq 'lite'){'AI-Audio-Notes-Lite'}else{'AI-Audio-Notes'}
-            tar.exe -a -cf (Join-Path $out "AI-Audio-Notes-v0.4.0-$variant-windows-x64.zip") -C $env:WIN_TEST_ROOT $folder
+            tar.exe -a -cf "release/AI-Audio-Notes-v0.4.0-$variant-windows-x64.zip" $folder
             if ($LASTEXITCODE) { exit $LASTEXITCODE }
           }
           Get-ChildItem $out -Filter '*.zip' | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" } | Set-Content (Join-Path $out 'SHA256SUMS.txt') -Encoding utf8NoBOM

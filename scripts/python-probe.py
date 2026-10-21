@@ -4,6 +4,7 @@ import json
 import platform
 import site
 import sys
+import sysconfig
 import os
 
 packages = {}
@@ -20,4 +21,5 @@ if site.ENABLE_USER_SITE:
 print(json.dumps({'executable': sys.executable, 'version': list(sys.version_info[:3]),
                   'arch': platform.machine(), 'packages': packages,
                   'prefix': sys.prefix, 'basePrefix': sys.base_prefix,
+                  'sitePackages': sysconfig.get_path('purelib'),
                   'sitePaths': [p for p in paths if os.path.isdir(p)]}))

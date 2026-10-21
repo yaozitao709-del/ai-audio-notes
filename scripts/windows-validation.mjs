@@ -6,6 +6,7 @@ const env={...process.env,...prepared.models,...prepared.audio,SPEAKER_PYTHON:pr
 const {prepare}=await import('./lite-setup.mjs');
 const again=await prepare({app,cache,roots:[app],env});assert.deepEqual(again.report.downloaded,[],'Second run must reuse everything.');
 await fs.writeFile(path.join(work,'lite-reuse.json'),JSON.stringify(again.report,null,2));
+await run(process.execPath,['scripts/windows-python-scenarios.mjs',work,app],{env,inherit:true,timeout:600000});
 await run(process.execPath,['scripts/download-models.mjs','--test'],{env,inherit:true});
 await run(process.execPath,['scripts/download-speaker-models.mjs','--test'],{env,inherit:true});
 const examples=path.join(prepared.models.SPEAKER_MODEL_ROOT,'speech_campplus_sv_zh-cn_16k-common/examples');

@@ -1,6 +1,6 @@
 # AI 录音纪要
 
-适用于苹果芯片 Mac 的本地录音纪要工具。中文/英文 Paraformer 快速转写，AI 结合上下文校对和轻度整理完整文字，再根据保存的完整成稿生成总结与章节。
+适用于 Windows 10/11 x64 和苹果芯片 Mac 的本地录音纪要工具。中文/英文 Paraformer 快速转写，AI 结合上下文校对和轻度整理完整文字，再根据保存的完整成稿生成总结与章节。
 
 ## 产品预览
 
@@ -20,46 +20,66 @@
 
 ## 普通用户下载
 
-到 [Releases](https://github.com/yaozitao709-del/ai-audio-notes/releases/latest) 选择一种 ZIP。不要把 GitHub 自动生成的 Source code ZIP 当作安装包。
+按自己的系统选择下载。Windows 新版与 Mac 已发布版本都保留；GitHub 自动生成的 Source code ZIP 不是安装包。
 
-| 下载 | 适合谁 | 首次启动 |
+| 系统 | 轻量版 | 完整版 |
 | --- | --- | --- |
-| **AI-Audio-Notes-v0.3.0-lite-macos-arm64.zip**（约 0.9 MB） | 希望小体积下载，或已有 Python / Node / 模型环境 | 自动检测并复用兼容组件，只补齐缺少或版本不符的部分 |
-| **AI-Audio-Notes-v0.3.0-full-macos-arm64.zip**（约 583 MB） | 希望自带已验证的推理环境，少处理依赖 | 已内置 Node、Python、Paraformer、VAD 和 CAM++；首次仍需联网准备音频工具 |
+| **Windows 10/11 x64** | [下载 v0.4.0 轻量版](https://github.com/yaozitao709-del/ai-audio-notes/releases/download/v0.4.0/AI-Audio-Notes-v0.4.0-lite-windows-x64.zip) | [下载 v0.4.0 完整版](https://github.com/yaozitao709-del/ai-audio-notes/releases/download/v0.4.0/AI-Audio-Notes-v0.4.0-full-windows-x64.zip) |
+| **苹果芯片 Mac** | [下载 v0.3.0 轻量版，约 0.9 MB](https://github.com/yaozitao709-del/ai-audio-notes/releases/download/v0.3.0/AI-Audio-Notes-v0.3.0-lite-macos-arm64.zip) | [下载 v0.3.0 完整版，约 583 MB](https://github.com/yaozitao709-del/ai-audio-notes/releases/download/v0.3.0/AI-Audio-Notes-v0.3.0-full-macos-arm64.zip) |
 
-两版使用同一套转写和分人方法，完整版本会继续保留。**轻量版的小体积指启动包本身；完全没有环境的电脑，首次需要下载的总量仍可能接近完整版。**
+- **轻量版**：自动检测已有 Node、Python、模型和音频工具，只下载缺少或版本不兼容的部分。完全没有环境时，首次总下载量仍可能接近完整版。
+- **完整版**：内置 Node、Python、Paraformer、FSMN-VAD、CAM++ 和语音依赖。与 Mac 完整版一致，音频工具首次从上游下载，因此首次启动仍需联网。
+- 两种版本使用同一套已修复的分人方法：新导入音频自动分人，新录音在结束后分人。Windows 使用 CPU，不需要 CUDA 或独立显卡。
 
-1. 完整解压并保留整个文件夹。轻量版的文件夹名为 `AI-Audio-Notes-Lite`，完整版为 `AI-Audio-Notes`；放在同一目录时，轻量版也会检测完整版可复用的组件。
-2. 双击 **启动AI录音纪要.command**。轻量版会显示检测、复用和补装进度；缺少组件时需要联网，不要求自行安装 Homebrew、Node 或 Python。
-3. 网络中断后重新启动即可；已经校验通过的文件不会重复下载，未完成的下载会尝试续传。
-4. 浏览器打开后，点右上角 **AI 设置**，填写自己的 API Key。默认 DeepSeek Flash，也支持兼容服务和自定义模型。
-5. 双击 **关闭AI录音纪要.command** 停止后台。升级前先关闭旧版；原笔记保存在同一个 Application Support 目录中。
+### Windows 使用
+
+需要 **Windows 10 2004（系统 build 19041）或更新版本 / Windows 11，x64 电脑**。此包不适用于 Windows ARM 或 32 位系统。
+
+1. 完整解压 ZIP，保留整个文件夹；不要直接在压缩包内打开程序。
+2. 双击 **Start.cmd**。轻量版显示检测与补装进度；不要求自己安装 Node/Python，也不需要管理员权限。首次安装请保持联网。
+3. 浏览器打开后，点右上角 **AI 设置**，填写自己的 API Key。默认 DeepSeek Flash，也支持兼容服务和自定义模型。
+4. 录音时允许浏览器使用麦克风。建议使用 Edge 或 Chrome；PDF 导出也会检测这两个浏览器。
+5. 双击 **Stop.cmd** 关闭后台；升级前先关闭旧版。`Prepare.cmd` 可只准备轻量版环境。
+
+数据保存在 `%LOCALAPPDATA%\AI Audio Notes`；轻量版缓存位于其中的 `runtime-cache`。关闭窗口不等于关闭后台，应用没有运行时不要手动删除数据目录。
+
+验证方式见 [Windows 自动测试](https://github.com/yaozitao709-del/ai-audio-notes/actions/workflows/windows.yml)：使用 Windows x64 hosted runner，覆盖中文/空格路径、首次安装、重复复用、转写分人、导出和完整版搬迁。Hosted runner 是 Windows Server；这不等同于每一种 Windows 10/11 实机和实体麦克风都已测试。
+
+### Mac 使用
+
+需要 **M 系列苹果芯片 Mac、macOS 14 Sonoma 或更新版本**。已有 v0.3.0 轻量版/完整版继续可用，无须为了 Windows 适配而重新下载。
+
+1. 完整解压，双击 **启动AI录音纪要.command**。
+2. 轻量版自动检测、复用和补装，不要求自行安装 Homebrew、Node 或 Python。
+3. 浏览器中配置自己的 AI 服务；双击 **关闭AI录音纪要.command** 停止后台。
+
+数据保存在 `~/Library/Application Support/AI Audio Notes`。这是脚本启动包，不是签名公证 DMG；系统询问是否打开时，请核对来源并使用系统提供的正常打开方式。
 
 ### 轻量版如何复用环境
 
-- 自动检查 PATH、当前激活的 venv/Conda、常见 Homebrew/pyenv/Conda 位置、同目录或常见安装位置的完整版。
-- Node 需为 Apple Silicon 原生版本且版本不低于 26。Python 使用已验证的 **3.11 / arm64** 配置；依赖按 `requirements-speech.txt` 检测，并验证关键模块能加载。版本不符时只在应用自己的隔离环境中补装，不升级或卸载原环境。
-- 模型逐文件校验 SHA256；已有匹配文件会直接复用，不重新下载。音频工具还会检查常用录音格式支持。
-- 缺少的环境和模型放在 `~/Library/Application Support/AI Audio Notes/runtime-cache`。复用的外部环境被移动或卸载后，下一次启动会重新检测和补齐。
-- 自定义环境可通过 `SPEAKER_PYTHON` 指定 Python，通过 `AI_AUDIO_REUSE_DIRS` 指定其他应用目录（多个目录用冒号分隔），通过 `PARAFORMER_MODEL_DIR` / `SPEAKER_MODEL_ROOT` 指定模型位置。只检测这些明确位置和常见位置，不扫描整块磁盘。
-- `AI_AUDIO_NODE` 可指定 Node；`AI_AUDIO_CACHE_DIR` 可改变运行缓存位置。通常不需要设置这些参数。
-
-此包需要 **M 系列苹果芯片 Mac、macOS 14 Sonoma 或更新版本**；不包含 Intel Mac、Windows、Linux 运行包。它是脚本启动包，不是经过 Apple 签名公证的 DMG。macOS 首次询问是否打开时，请检查下载来源并使用系统提供的正常打开方式；不要关闭系统安全保护。
+- 检查 PATH、激活的 venv/Conda、常见 Python/Conda 安装位置和同目录完整版。Mac 也检查 Homebrew/pyenv；Windows 也检查 Python Launcher。
+- Node 需为本机架构且不低于 26。Python 使用 **3.11**，Windows 为 x64、Mac 为 arm64；按对应平台的 `requirements-speech*.txt` 检测版本，再实际导入关键模块。
+- 不完整的现有 Python 环境只作为只读来源；缺少或版本不符的包安装到应用自己的隔离目录，不升级或卸载原环境。
+- 模型逐文件校验 SHA256；已有匹配文件不重新下载。音频工具检查常用格式。网络中断后再次启动即可重试，校验通过的文件保留。
+- 自定义 Python 可设 `SPEAKER_PYTHON`；模型可设 `PARAFORMER_MODEL_DIR` / `SPEAKER_MODEL_ROOT`。`AI_AUDIO_REUSE_DIRS` 可指定其他应用目录，Windows 多个目录用分号分隔，Mac 用冒号分隔。
+- `AI_AUDIO_NODE` 可指定 Node，`AI_AUDIO_CACHE_DIR` 可改变缓存位置，`AI_AUDIO_DATA_ROOT` 可改变笔记数据位置。通常不需要设置这些参数。
+- 排查复杂 Python 环境问题时，可设 `AI_AUDIO_ISOLATED_PYTHON=1`，强制使用应用独立的 Python。
+- 只检测明确位置和常见位置，不扫描整块磁盘。复用的外部环境移动或卸载后，下一次启动会重新检测。
 
 ## 数据与隐私
 
 - 包内 **不含任何个人 API 密钥、录音、历史转写、总结、专名词表或开发日志**。首次打开应是空白笔记和未配置 AI 状态。
-- 数据保存在自己的 `~/Library/Application Support/AI Audio Notes`。升级前先关闭旧版，重新下载时保留此目录即可；不要把它转发给别人。
+- 数据保存在本机对应系统的数据目录（见上文）。升级前先关闭旧版，重新下载时保留此目录即可；不要把它转发给别人。
 - 语音识别在本机完成，原音不会被本应用上传到 AI 服务。**校对与总结会把文字发送给用户自行配置的 AI 服务**，并遵循该服务的规则和费用。
 - API Key 保存在本机配置文件中，文件权限限制为当前用户；页面不回显完整旧密钥。分享应用时不要附带本机数据目录或 `.env`。
 - 新导入自动区分讲话人；新录音在结束后完成分人。历史记录可点“重新区分讲话人”，处理前自动备份。编号表示录音内的声音身份，不是真实姓名。
-- v0.2.0 修复了少量异常声音导致两位主要讲话人被合并的问题；长录音使用谱聚类，苹果芯片优先使用 MPS/GPU，失败时回退 CPU。
+- v0.2.0 修复了少量异常声音导致两位主要讲话人被合并的问题；长录音使用谱聚类。Windows 使用 CPU；苹果芯片优先使用 MPS/GPU，失败时回退 CPU。
 - 时间为声音片段定位参考，不是逐字对齐；短促插话、重叠讲话、相似声音仍可能误分。
 - 整理保留强调、犹豫、数字、否定与自我纠正，无法确定的地方可能继续保留原词；不保证消除所有识别错误。
 
 ## 开发者运行源码
 
-请从 GitHub 克隆源码后开发，不要直接修改分发包中的合并文件。需要苹果芯片 Mac、Node.js 26+ 和 Python 3.11：
+请从 GitHub 克隆源码后开发，不要直接修改分发包中的合并文件。需要对应系统的 Node.js 26+、Python 3.11。Mac：
 
 ```sh
 npm ci
@@ -68,6 +88,20 @@ npm run setup:speakers
 python3.11 -m venv .venv
 .venv/bin/python -m pip install -r requirements-speech.txt
 export SPEAKER_PYTHON="$PWD/.venv/bin/python"
+npm run build
+npm start
+```
+
+Windows PowerShell（源码开发；普通用户用上面的 ZIP）：
+
+```powershell
+npm ci
+npm run setup:models
+npm run setup:speakers
+py -3.11 -m venv .venv
+.venv\Scripts\python.exe -m pip install torch==2.11.0 torchaudio==2.11.0 --index-url https://download.pytorch.org/whl/cpu
+.venv\Scripts\python.exe -m pip install --find-links support-wheels -r requirements-speech-windows.txt
+$env:SPEAKER_PYTHON = (Resolve-Path '.venv\Scripts\python.exe').Path
 npm run build
 npm start
 ```

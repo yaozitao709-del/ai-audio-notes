@@ -18,6 +18,7 @@ export function reuseRoots(app=root,env=process.env,home=os.homedir()){
     path.join(home,'Downloads/AI-Audio-Notes'),path.join(home,'AI本地工具/Apps/ai-audio-notes')]);
 }
 export async function pythonCandidates(app,cache,roots,env=process.env,home=os.homedir()){
+  if(env.AI_AUDIO_ISOLATED_PYTHON==='1')return [];
   const previous=await readJson(path.join(cache,'environment.json')).catch(()=>({}));
   const candidates=[env.SPEAKER_PYTHON,previous.python,path.join(cache,'speech-env',platform.venvPython),
     env.VIRTUAL_ENV&&path.join(env.VIRTUAL_ENV,platform.venvPython),env.CONDA_PREFIX&&path.join(env.CONDA_PREFIX,platform.python),
@@ -142,9 +143,9 @@ export async function preparePython(app,cache,manifest,{env=process.env,candidat
     // All package installation happens in this app-owned venv, never in best.executable.
     if(await exists(owned))await fs.rename(owned,owned+'.incomplete-'+Date.now());
     await run(best.executable,['-B','-m','venv',owned],{env:penv,timeout:120000});
-    const sites=(await probePython(python,app,penv)).sitePaths;
+    const sitePackages=(await probePython(python,app,penv)).sitePackages;
     const paths=best.sitePaths.filter(p=>!p.includes('\n')&&!p.startsWith(owned));
-    await fs.writeFile(path.join(sites[0],'audio-notes-existing-env.pth'),paths.join('\n')+'\n');
+    await fs.writeFile(path.join(sitePackages,'audio-notes-existing-env.pth'),paths.join('\n')+'\n');
   }
   await copyVc(app,path.dirname(python));
   let current=await probePython(python,app,penv);if(!current || await fs.realpath(current.prefix)!==await fs.realpath(owned))throw new Error('拒绝向非应用目录安装 Python 依赖。');
@@ -161,7 +162,8 @@ export async function preparePython(app,cache,manifest,{env=process.env,candidat
     report.downloaded.push(...missing.map(n=>'Python:'+n));
   }
   current=await probePython(python,app,penv);
-  if(missingPackages(required,current?.packages).length)throw new Error('语音依赖安装不完整，请联网后重新启动；已完成的部分会复用。');
+  const remaining=missingPackages(required,current?.packages);
+  if(remaining.length)throw new Error('语音依赖版本校验未通过：'+remaining.join(', ')+'。请重新启动重试；已完成的部分会复用。');
   await smokePython(python,penv);return {python,env:penv,missing};
 }
 export async function prepare({app=root,cache,roots,candidates,env=process.env,log=console.log}={}){
