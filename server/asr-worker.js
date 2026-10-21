@@ -9,6 +9,7 @@ parentPort.on("message", ({ id, method, payload }) => {
     try {
       let result;
       if (method === "file") result = await engine.transcribeFile(payload);
+      else if (method === "turns") result = await engine.transcribeTurns(payload.audioPath, payload.turns);
       else if (method === "live") result = engine.transcribeLive(payload);
       else if (method === "clear") result = engine.clearSession(payload);
       else if (method === "health") result = { status: "ready", model: "Paraformer streaming int8", loadSeconds: engine.loadSeconds };

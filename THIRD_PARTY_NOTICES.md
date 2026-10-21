@@ -9,3 +9,11 @@ The application code is MIT licensed. Third-party components keep their own lice
 - FFmpeg/FFprobe platform binaries are NOT redistributed inside this release; the JavaScript wrapper packages are included with their package notices. They are downloaded directly from the public npm tarballs pinned by SHA512 in AUDIO_TOOLS_MANIFEST.json on first launch. Their package notices and licenses apply (FFmpeg may contain GPL components; FFprobe package declares LGPL-2.1). Sources: https://github.com/kribblo/node-ffmpeg-installer , https://github.com/SavageCore/node-ffprobe-installer , https://ffmpeg.org/ . Do not repackage third-party binaries without retaining their licenses and satisfying applicable source requirements.
 
 No personal API credentials, recordings, transcript history or private dictionaries are part of this repository or the release archive.
+
+## Speaker runtime added in v0.2.0
+
+- FSMN-VAD and CAM++: unchanged weights from the official FunASR Hugging Face repositories, both model cards declare Apache-2.0. Pinned revisions, URLs and SHA256 are in SPEAKER_MODEL_MANIFEST.json; model cards are shipped with the weights. Only those two speaker models are included; no SenseVoice weights.
+- FunASR: MIT; https://github.com/modelscope/FunASR . Spectral clustering is provided by its CAM++ clustering backend, derived from 3D-Speaker.
+- CPython 3.11.17, distributed by Astral python-build-standalone: https://github.com/astral-sh/python-build-standalone/releases/tag/20261020 . Original runtime license files are retained.
+- PyTorch, TorchAudio, NumPy, SciPy, scikit-learn and other Python dependencies retain their licenses and notices in runtime/python/lib/python3.11/site-packages, including distribution metadata and license directories. Pinned versions are in requirements-speech.txt. Runtime provenance and checksums are in PYTHON_RUNTIME_MANIFEST.json.
+- Public CAM++ example WAVs are only downloaded for source tests with --test; they are not included in the user download package.

@@ -13,6 +13,7 @@ async function saveJson(filename, payload) {
 }
 
 export async function proofreadNote(note, { rawTranscript, engine, directory, updateNote, termFixes = [] }) {
+  const preservedSummaryLead=note.summaryLead || '';
   if (!rawTranscript && note.transcriptEditedAt) return note;
   if (!rawTranscript && note.proofreading?.status === 'done' && note.proofreading.policy === PROOFREAD_POLICY && note.proofreading.model === engine.model && note.proofreading.configurationId === engine.configurationId && note.proofreading.outputHash === transcriptHash(note.transcript)) return note;
   if (!rawTranscript && note.rawTranscriptPath) rawTranscript = JSON.parse(await fs.readFile(note.rawTranscriptPath, 'utf8')).transcript;
@@ -24,7 +25,7 @@ export async function proofreadNote(note, { rawTranscript, engine, directory, up
   const rawHash = transcriptHash(rawTranscript);
   const rawPath = path.join(directory, `${note.id}.${rawHash}.raw.json`);
   try { await fs.access(rawPath); } catch { await saveJson(rawPath, { transcript: rawTranscript, hash: rawHash }); }
-  note = await updateNote(note.id, { rawTranscriptPath: rawPath, status: 'proofreading', failedStage: '', error: '', summaryLead: '正在结合上下文校对并轻度整理全文。', proofreading: { status: 'running', model: engine.model, completed: 0, total: 0 } });
+  note = await updateNote(note.id, { rawTranscriptPath: rawPath, status: 'proofreading', failedStage: '', error: '', summaryLead: note.summaryRequested===false?preservedSummaryLead:'正在结合上下文校对并轻度整理全文。', proofreading: { status: 'running', model: engine.model, completed: 0, total: 0 } });
   const input = rawTranscript.map(line => ({ ...line, text: termFixes.reduce((text, fix) => text.replaceAll(fix.from, fix.to), line.text) }));
   let progress = Promise.resolve();
   const result = await engine.proofread(input, { title: note.title, termFixes, onProgress: info => {
@@ -35,8 +36,9 @@ export async function proofreadNote(note, { rawTranscript, engine, directory, up
   const resultPath = path.join(directory, `${note.id}.${result.inputHash}.corrected.json`);
   await saveJson(resultPath, { ...result, outputHash, rawTranscriptPath: rawPath, createdAt: new Date().toISOString() });
   return updateNote(note.id, {
-    transcript: result.transcript, proofreadingPath: resultPath, status: 'summarizing', failedStage: '',
-    summaryLead: '全文已校对整理，正在生成总结。',
+    transcript: result.transcript, proofreadingPath: resultPath, status: note.summaryRequested===false?'done':'summarizing', failedStage: '',
+    summaryLead: note.summaryRequested===false?preservedSummaryLead:'全文已校对整理，正在生成总结。',
+    ...(note.summaryRequested===false?{summaryIsStale:Boolean(preservedSummaryLead)}:{}),
     proofreading: { status: 'done', model: result.model, version: result.version, policy: result.policy, configurationId:result.configurationId, inputHash: result.inputHash, outputHash,
       elapsedSeconds: result.elapsedSeconds, appliedCount: result.applied.length, rejectedCount: result.rejected.length,
       uncertain: result.uncertain.slice(0, 100), completed: result.chunks.length, total: result.chunks.length, completedAt: new Date().toISOString(), chunks: result.chunks },

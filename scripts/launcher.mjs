@@ -28,6 +28,14 @@ async function start(){
   if((!bundled && !await exists(path.join(root,'node_modules/express/package.json'))) || !await exists(path.join(root,'node_modules/sherpa-onnx-darwin-arm64/package.json'))){
     throw new Error('运行依赖不完整。普通用户请下载完整 Mac ZIP；源码用户请先执行 npm ci。');
   }
+  if(process.env.SPEAKER_DIARIZATION !== 'false'){
+    const python=process.env.SPEAKER_PYTHON || path.join(root,'runtime/python/bin/python3');
+    const models=process.env.SPEAKER_MODEL_ROOT || path.join(root,'models/speakers');
+    if(!await exists(python))throw new Error('分人运行环境缺失。请下载完整 Mac ZIP；源码用户请按 README 配置 SPEAKER_PYTHON。');
+    for(const file of ['speech_fsmn_vad_zh-cn-16k-common-pytorch/model.pt','speech_campplus_sv_zh-cn_16k-common/campplus_cn_common.bin']){
+      if(!await exists(path.join(models,file)))throw new Error('分人模型缺失。请下载完整 Mac ZIP，或执行 npm run setup:speakers。');
+    }
+  }
   await ensureAudioTools(root);
   await fs.mkdir(runDir,{recursive:true,mode:0o700});
   const instanceId=crypto.randomUUID();

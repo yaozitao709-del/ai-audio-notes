@@ -21,6 +21,7 @@ import {
   SkipForward,
   Square,
   Trash2,
+  Users,
   X
 } from "lucide-react";
 import {
@@ -34,6 +35,7 @@ import {
   renameNote,
   resummarizeNote,
   retryNote,
+  recognizeSpeakers,
   saveTermFixes,
   saveTranscript
 } from "./api.js";
@@ -52,7 +54,7 @@ import {
 } from "./utils.js";
 
 const acceptedAudioExtensions = [".mp3", ".m4a", ".wav", ".webm", ".ogg"];
-const processingStatuses = new Set(["importing", "transcribing", "proofreading", "summarizing"]);
+const processingStatuses = new Set(["importing", "diarizing", "transcribing", "proofreading", "summarizing"]);
 const exportTypeMeta = {
   word: { label: "Word", extension: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
   pdf: { label: "PDF", extension: "pdf", mime: "application/pdf" },
@@ -150,6 +152,7 @@ function StatusPill({ status, failedStage }) {
     finalizing: "补全中",
     importing: "导入中",
     transcribing: "转写中",
+    diarizing: "分人中",
     proofreading: "校对中",
     summarizing: "总结中",
     failed: "失败"
@@ -317,7 +320,7 @@ function HomePage({
 
       <section className="asr-mode-bar" aria-label="转写设置">
         <strong>快速转写</strong>
-        <span>转写后自动校对全文，再生成总结</span>
+        <span>自动区分讲话人，校对全文后再生成总结</span>
       </section>
 
       <section className="action-grid" aria-label="主要操作">
@@ -447,6 +450,7 @@ function TranscriptPanel({
         <div className="panel-title-row">
           <div className="transcript-title">
             <p className="eyebrow">全文</p>
+            {note.speakerRecognition?.status === 'done' ? <span className="proofread-badge">已区分 {note.speakerRecognition.speakerCount} 位讲话人</span> : null}
             {note.proofreading?.status === "done" ? <span className="proofread-badge">{note.proofreading.policy?.startsWith("context-edits-v3-clean:") ? "AI 已校对整理" : "AI 已校对"}</span> : note.proofreading?.status === "manual" ? <span className="proofread-badge">已编辑</span> : null}
           </div>
           <div className="transcript-tools">
@@ -577,13 +581,13 @@ function SummaryPanel({ note, activeChapterIndex, activeTab, onTabChange, onSeek
       </div>
 
       <div className="summary-scroll">
-        {["recording", "finalizing", "summarizing", "proofreading", "transcribing"].includes(note.status) ? (
+        {["recording", "finalizing", "diarizing", "summarizing", "proofreading", "transcribing"].includes(note.status) ? (
           <div className="summary-loading">
             <Loader2 size={22} />
             <span>
               {note.status === "recording"
                 ? "录音结束后生成总结"
-                : note.status === "proofreading" ? "全文校对中" : note.status === "finalizing" || note.status === "transcribing"
+                : note.status === "diarizing" ? "正在根据声音区分讲话人" : note.status === "proofreading" ? "全文校对中" : note.status === "finalizing" || note.status === "transcribing"
                   ? "转写生成中"
                   : "总结生成中"}
             </span>
@@ -1073,6 +1077,7 @@ function DetailPage({
   onExport,
   onExportAudio,
   onRegenerateQuality,
+  onRecognizeSpeakers,
   onSaveTranscript,
   onStopRecording
 }) {
@@ -1249,6 +1254,11 @@ function DetailPage({
           <span>录音纪要 / {note.title}</span>
         </button>
         <div className="export-controls">
+          <button className="quality-button" type="button"
+            disabled={processingStatuses.has(note.status) || ["recording","finalizing"].includes(note.status)}
+            onClick={()=>onRecognizeSpeakers(note.id)}>
+            <Users size={17}/>{note.speakerRecognition?.status==='done'?'重新区分讲话人':'区分讲话人'}
+          </button>
           <button
             className="quality-button"
             type="button"
@@ -1258,7 +1268,7 @@ function DetailPage({
             <RefreshCw size={17} />
             重新生成总结
           </button>
-          <button className="export-button" type="button" onClick={() => setIsExportMenuOpen((value) => !value)}>
+          <button className="export-button" disabled={processingStatuses.has(note.status)} type="button" onClick={() => setIsExportMenuOpen((value) => !value)}>
             <Download size={18} />
             导出
           </button>
@@ -1437,7 +1447,7 @@ function App() {
   }, [loadNotes]);
 
   useEffect(() => {
-    const hasActiveJob = notes.some((note) => ["importing", "transcribing", "proofreading", "summarizing"].includes(note.status));
+    const hasActiveJob = notes.some((note) => processingStatuses.has(note.status));
     if (!hasActiveJob) return undefined;
     const timer = window.setInterval(() => {
       loadNotes();
@@ -1516,7 +1526,7 @@ function App() {
           ...note,
           transcript,
           recordingMessage: result.speakerStatus === "disabled"
-            ? result.final ? "上一句话已确认" : "正在快速转写，最后一句可能自动纠错"
+            ? result.final ? "上一句话已确认，录音结束后区分讲话人" : "正在快速转写，录音结束后区分讲话人"
             : result.speakerStatus === "unavailable"
             ? "实时转录正常，说话人区分暂不可用"
             : result.final
@@ -1798,6 +1808,14 @@ function App() {
     }
   };
 
+  const runSpeakerRecognition = async(noteId)=>{
+    try{
+      const note=await recognizeSpeakers(noteId);
+      setNotes(current=>current.map(row=>row.id===note.id?note:row));
+      loadNotes();
+    }catch(error){window.alert(error?.message || '讲话人区分启动失败');}
+  };
+
   if(isAISettingsOpen)return <AISettingsPage onBack={()=>{window.location.hash='';}} onSaved={settingsReceiver.current.saved}/>;
 
   if (selectedNote) {
@@ -1810,6 +1828,7 @@ function App() {
         onExport={exportNote}
         onExportAudio={exportAudio}
         onRegenerateQuality={regenerateQuality}
+        onRecognizeSpeakers={runSpeakerRecognition}
         onSaveTranscript={saveNoteTranscript}
         onStopRecording={stopRecording}
       />

@@ -32,7 +32,7 @@ test("single fast engine handles imports, live, legacy retries and exports witho
       const input = JSON.parse(body.messages.at(-1).content);
       const edits = input.body.flatMap(row => {
         if (row.text.includes("我我我建议")) return [{ id: row.id, before: "我我我建议", after: "我建议", kind: "cleanup", cleanup_type: "stutter", reason: "清理无意义口吃" }];
-        if (row.text.includes("越请晰")) return [{ id: row.id, before: "越请晰", after: "越清晰", kind: "typo", reason: "明确同音错词" }];
+        if (row.text.includes("越挣规")) return [{ id: row.id, before: "越挣规", after: "越正规", kind: "typo", reason: "明确同音错词" }];
         if (row.text.includes("monday")) return [{ id: row.id, before: "monday", after: "Monday", kind: "typo", reason: "英文大小写" }];
         return [];
       });
@@ -52,7 +52,7 @@ test("single fast engine handles imports, live, legacy retries and exports witho
   await new Promise(resolve => listener.close(resolve));
   const server = spawn(process.execPath, ["server/index.js"], {
     cwd: new URL("..", import.meta.url),
-    env: { ...process.env, PORT: String(port), AI_AUDIO_DATA_ROOT: dir, DEEPSEEK_API_KEY: "local-test-key", DEEPSEEK_BASE_URL: `http://127.0.0.1:${aiServer.address().port}`, DEEPSEEK_PROOFREAD_MODEL: "test-proofreader", SENSEVOICE_PYTHON: "/not-installed/python", SENSEVOICE_SCRIPT: "/not-installed/asr.py" },
+    env: { ...process.env, SPEAKER_DIARIZATION:'false', PORT: String(port), AI_AUDIO_DATA_ROOT: dir, DEEPSEEK_API_KEY: "local-test-key", DEEPSEEK_BASE_URL: `http://127.0.0.1:${aiServer.address().port}`, DEEPSEEK_PROOFREAD_MODEL: "test-proofreader", SENSEVOICE_PYTHON: "/not-installed/python", SENSEVOICE_SCRIPT: "/not-installed/asr.py" },
     stdio: ["ignore", "pipe", "pipe"]
   });
   let logs = "";
@@ -72,7 +72,7 @@ test("single fast engine handles imports, live, legacy retries and exports witho
     return payload;
   };
   let started = false;
-  for (let i = 0; i < 600; i++) {
+  for (let i = 0; i < 100; i++) {
     try { await request("/api/health"); started = true; break; } catch { await delay(100); }
   }
   assert.ok(started, logs);
@@ -196,7 +196,7 @@ test("single fast engine handles imports, live, legacy retries and exports witho
 
   const failureForm = (extra = "") => {
     const data = form();
-    data.append("transcript", JSON.stringify([{ speaker: "讲话人1", startTime: "00:00:00", text: "这份设备说明需要越请晰越好，后续保持29.9元价格，不改变任何安排。" + extra }]));
+    data.append("transcript", JSON.stringify([{ speaker: "讲话人1", startTime: "00:00:00", text: "这份财务制度需要越挣规越好，后续保持29.9元价格，不改变任何安排。" + extra }]));
     return data;
   };
   const waitForFailure = async id => {
@@ -218,8 +218,8 @@ test("single fast engine handles imports, live, legacy retries and exports witho
   aiMode = "ok";
   await request(`/api/notes/${failed.id}/retry`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
   const corrected = await waitForDone(failed.id);
-  assert.match(corrected.transcript[0].text,/越清晰/);
-  assert.match(aiRequests.filter(r=>r.kind==="summary").at(-1).body.messages.at(-1).content,/越清晰/);
+  assert.match(corrected.transcript[0].text,/越正规/);
+  assert.match(aiRequests.filter(r=>r.kind==="summary").at(-1).body.messages.at(-1).content,/越正规/);
   assert.equal(JSON.parse(await fs.readFile(path.join(dir,"notes",`${failed.id}.json`),"utf8")).transcriptPath,undefined);
 
   aiMode = "summary-fail";
@@ -265,12 +265,12 @@ test("single fast engine handles imports, live, legacy retries and exports witho
 
   const legacyOnlyId = "legacy-correction";
   const legacyOnly = { ...beforeRetry, id: legacyOnlyId, status: "done", title: "旧历史稿.wav", asrMode: undefined,
-    transcript: [{ speaker:"讲话人1",startTime:"00:00:00",text:"这份旧历史稿需要越请晰越好，保持全部原有段落和文字顺序。" }],
+    transcript: [{ speaker:"讲话人1",startTime:"00:00:00",text:"这份旧历史稿需要越挣规越好，保持全部原有段落和文字顺序。" }],
     rawTranscriptPath: undefined, proofreadingPath: undefined, proofreading: undefined, transcriptEditedAt: undefined };
   await fs.writeFile(path.join(dir,"notes",`${legacyOnlyId}.json`),JSON.stringify(legacyOnly));
   const regeneratedLegacy=await request(`/api/notes/${legacyOnlyId}/resummarize`, { method:"POST",headers:{"Content-Type":"application/json"},body:"{}" });
   assert.equal(regeneratedLegacy.note.proofreading.status,"done");
-  assert.match(regeneratedLegacy.note.transcript[0].text,/越清晰/);
+  assert.match(regeneratedLegacy.note.transcript[0].text,/越正规/);
 
   aiMode="invalid-summary";
   const invalidSummary=await request("/api/notes/live-finalize", { method:"POST",body:failureForm("这是总结字段完整性检查。") });

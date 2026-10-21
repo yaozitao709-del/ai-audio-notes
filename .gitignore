@@ -11,3 +11,7 @@ models/
 *.log
 *.zip
 build/
+build/
+__pycache__/
+*.pyc
+.venv/

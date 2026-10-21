@@ -46,6 +46,7 @@ export class FastAsr {
 
   health() { return this.request("health"); }
   transcribeFile(audioPath) { return this.request("file", audioPath); }
+  transcribeTurns(audioPath, turns) { return this.request("turns", {audioPath, turns}); }
   transcribeLive(payload) { return this.request("live", payload); }
   clearSession(sessionId) { return this.request("clear", sessionId); }
   async close() { if (this.worker) await this.worker.terminate(); }

@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createProofreadingChunks, applyProofreadingEdits, Proofreader } from './proofreading.js';
 
-const sentence = '这份设备说明需要越请晰越好，同事确认后我们再继续讨论后续交付安排。';
+const sentence = '这份财务制度需要越挣规越好，股东确认后我们再继续讨论后续交付安排。';
 const line = (text, i = 0) => ({ lineId: `saved-${i}`, startTime: `00:00:${String(i).padStart(2, '0')}`, speaker: '讲话人1', text });
 const responseFor = (chunk, edits = []) => ({ reviewed_ids: chunk.body.map(p => p.id), edits, uncertain: [] });
 const edit = (id, before, after, kind = 'typo') => ({ id, before, after, kind, reason: '根据上下文修正' });
@@ -15,10 +15,10 @@ test('local edits preserve every paragraph and metadata; original input stays un
   const original = structuredClone(input);
   const engine = new Proofreader({ model: 'test-model', request: async ({ messages }) => {
     const chunk = JSON.parse(messages.at(-1).content);
-    return { payload: responseFor(chunk, [edit(chunk.body[0].id, '越请晰', '越清晰')]), elapsedSeconds: 0.1 };
+    return { payload: responseFor(chunk, [edit(chunk.body[0].id, '越挣规', '越正规')]), elapsedSeconds: 0.1 };
   }});
   const result = await engine.proofread(input, { title: '测试录音' });
-  assert.equal(result.transcript[0].text, sentence.replace('越请晰', '越清晰'));
+  assert.equal(result.transcript[0].text, sentence.replace('越挣规', '越正规'));
   assert.deepEqual(result.transcript[1], input[1]);
   assert.deepEqual(result.transcript.map(({ text, ...meta }) => meta), input.map(({ text, ...meta }) => meta));
   assert.deepEqual(input, original);
@@ -48,7 +48,7 @@ test('numbers, negations, invented names, ambiguous anchors and whole-paragraph 
 test('overlapping replacements are rejected; short segments only accept punctuation changes', () => {
   const [chunk] = createProofreadingChunks([line(sentence),line('你好世界',1)]);
   const a=chunk.body[0].id,b=chunk.body[1].id;
-  const result=applyProofreadingEdits(chunk,responseFor(chunk,[edit(a,'越请晰','越清晰'),edit(a,'请晰','清晰'),edit(b,'世界','大家'),edit(b,'界','界。','punctuation')]));
+  const result=applyProofreadingEdits(chunk,responseFor(chunk,[edit(a,'越挣规','越正规'),edit(a,'挣规','正规'),edit(b,'世界','大家'),edit(b,'界','界。','punctuation')]));
   assert.equal(result.segments[0].text,sentence);
   assert.equal(result.segments[1].text,'你好世界。');
   assert.equal(result.applied.length,1);
@@ -70,9 +70,9 @@ test('oversized or dense changes do not rewrite the source', () => {
 });
 
 test('proofreading cannot erase repetitions or guess personal names through a typo label', () => {
-  const text='原来的语气和前后顺序都需要保留。'.repeat(4)+'这位新新学员已经表示想想想要参与演练，我们需要保留他的完整说法，后面甲某就不来。';
+  const text='原来的语气和前后顺序都需要保留。'.repeat(4)+'这个新新客户已经表示想想想要来学，我们需要保留他的完整说法，后面甲某就不来。';
   const [chunk]=createProofreadingChunks([line(text)]);const id=chunk.body[0].id;
-  const result=applyProofreadingEdits(chunk,responseFor(chunk,[edit(id,'新新学员','新学员'),edit(id,'想想想要参与演练','想要参与演练'),{...edit(id,'后面甲某就不来','后面乙某就不来'),reason:'根据上下文统一人名'}]));
+  const result=applyProofreadingEdits(chunk,responseFor(chunk,[edit(id,'新新客户','新客户'),edit(id,'想想想要来学','想要来学'),{...edit(id,'后面甲某就不来','后面乙某就不来'),reason:'根据上下文统一人名'}]));
   assert.equal(result.segments[0].text,text);assert.equal(result.applied.length,0);
 });
 
@@ -168,9 +168,9 @@ test('cleanup preserves emphasis, answers, uncertainty, negation, figures and se
 });
 
 test('proofreading cannot change who an action refers to or apply a simultaneously disputed correction',()=>{
-  const text='我本来想把这个任务你跟起来了，后续的具体安排需要继续讨论，没有实质次的进展。'+'后续的执行安排仍然需要根据实际反馈继续讨论。'.repeat(3);
+  const text='我本来想把这个舞蹈你跟起来了，后续的具体安排需要继续讨论，没有实质次的进展。'+'后续的执行安排仍然需要根据实际反馈继续讨论。'.repeat(3);
   const [c]=createProofreadingChunks([line(text)]),id=c.body[0].id;
-  const payload=responseFor(c,[edit(id,'这个任务你跟起来了','这个任务给它跟起来了'),edit(id,'实质次','实质性')]);
+  const payload=responseFor(c,[edit(id,'这个舞蹈你跟起来了','这个舞蹈给它跟起来了'),edit(id,'实质次','实质性')]);
   payload.uncertain=[{id,text:'实质次',reason:'原音有其他解释，无法确定'}];
   const result=applyProofreadingEdits(c,payload);
   assert.equal(result.segments[0].text,text);assert.equal(result.applied.length,0);

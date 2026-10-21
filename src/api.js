@@ -140,6 +140,11 @@ export async function retryNote(id, options = {}) {
   return normalizeNote(payload.note);
 }
 
+export async function recognizeSpeakers(id) {
+  const payload=await requestJson(`/api/notes/${id}/speakers`,{method:'POST',body:'{}'});
+  return normalizeNote(payload.note);
+}
+
 export async function renameNote(id, title) {
   const payload = await requestJson(`/api/notes/${id}`, {
     method: "PATCH",

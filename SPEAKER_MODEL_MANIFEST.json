@@ -1,0 +1,110 @@
+[
+  {
+    "model": "funasr/campplus",
+    "revision": "e4b6ede7ce16997aff4ae69fbca1f0175e2afede",
+    "file": "campplus_cn_common.bin",
+    "bytes": 28036335,
+    "sha256": "3388cf5fd3493c9ac9c69851d8e7a8badcfb4f3dc631020c4961371646d5ada8",
+    "url": "https://huggingface.co/funasr/campplus/resolve/e4b6ede7ce16997aff4ae69fbca1f0175e2afede/campplus_cn_common.bin",
+    "directory": "speech_campplus_sv_zh-cn_16k-common"
+  },
+  {
+    "model": "funasr/campplus",
+    "revision": "e4b6ede7ce16997aff4ae69fbca1f0175e2afede",
+    "file": "config.yaml",
+    "bytes": 537,
+    "sha256": "17342041bd5b22f6fd7e32f6e7a267b0bf65f018c0a721bada6547e3d28fbfc9",
+    "url": "https://huggingface.co/funasr/campplus/resolve/e4b6ede7ce16997aff4ae69fbca1f0175e2afede/config.yaml",
+    "directory": "speech_campplus_sv_zh-cn_16k-common"
+  },
+  {
+    "model": "funasr/campplus",
+    "revision": "e4b6ede7ce16997aff4ae69fbca1f0175e2afede",
+    "file": "configuration.json",
+    "bytes": 581,
+    "sha256": "6f7acaf1e81ca121f4a3c71b6ddb66beec24350a3ef330e2c846f17829176a8f",
+    "url": "https://huggingface.co/funasr/campplus/resolve/e4b6ede7ce16997aff4ae69fbca1f0175e2afede/configuration.json",
+    "directory": "speech_campplus_sv_zh-cn_16k-common"
+  },
+  {
+    "model": "funasr/campplus",
+    "revision": "e4b6ede7ce16997aff4ae69fbca1f0175e2afede",
+    "file": "README.md",
+    "bytes": 2020,
+    "sha256": "c6025ccc42e290640f44e06f0742c584b99afe738bb819d74889330c692446f9",
+    "url": "https://huggingface.co/funasr/campplus/resolve/e4b6ede7ce16997aff4ae69fbca1f0175e2afede/README.md",
+    "directory": "speech_campplus_sv_zh-cn_16k-common"
+  },
+  {
+    "model": "funasr/fsmn-vad",
+    "revision": "df20e6b30c653645fa4ff125cacfcabd1020a669",
+    "file": "model.pt",
+    "bytes": 1721366,
+    "sha256": "b3be75be477f0780277f3bae0fe489f48718f585f3a6e45d7dd1fbb1a4255fc5",
+    "url": "https://huggingface.co/funasr/fsmn-vad/resolve/df20e6b30c653645fa4ff125cacfcabd1020a669/model.pt",
+    "directory": "speech_fsmn_vad_zh-cn-16k-common-pytorch"
+  },
+  {
+    "model": "funasr/fsmn-vad",
+    "revision": "df20e6b30c653645fa4ff125cacfcabd1020a669",
+    "file": "am.mvn",
+    "bytes": 8033,
+    "sha256": "df189fd5f4352df84a0fd464eeab4e450a5e645665d6b38f13c832492261a739",
+    "url": "https://huggingface.co/funasr/fsmn-vad/resolve/df20e6b30c653645fa4ff125cacfcabd1020a669/am.mvn",
+    "directory": "speech_fsmn_vad_zh-cn-16k-common-pytorch"
+  },
+  {
+    "model": "funasr/fsmn-vad",
+    "revision": "df20e6b30c653645fa4ff125cacfcabd1020a669",
+    "file": "config.yaml",
+    "bytes": 1215,
+    "sha256": "486861ca26ddb79081663b6179cb204c6bfae71c52f04aafc48a9e9d8dde1e93",
+    "url": "https://huggingface.co/funasr/fsmn-vad/resolve/df20e6b30c653645fa4ff125cacfcabd1020a669/config.yaml",
+    "directory": "speech_fsmn_vad_zh-cn-16k-common-pytorch"
+  },
+  {
+    "model": "funasr/fsmn-vad",
+    "revision": "df20e6b30c653645fa4ff125cacfcabd1020a669",
+    "file": "configuration.json",
+    "bytes": 365,
+    "sha256": "7bce8867e37d55c3dd8f672695ced18077a2be199ea529a5d432d5350fc0acba",
+    "url": "https://huggingface.co/funasr/fsmn-vad/resolve/df20e6b30c653645fa4ff125cacfcabd1020a669/configuration.json",
+    "directory": "speech_fsmn_vad_zh-cn-16k-common-pytorch"
+  },
+  {
+    "model": "funasr/fsmn-vad",
+    "revision": "df20e6b30c653645fa4ff125cacfcabd1020a669",
+    "file": "README.md",
+    "bytes": 2289,
+    "sha256": "bc7ed04222f932ea519e5969140a7fa14944becbbb3c0728a267c5bf9dc9c200",
+    "url": "https://huggingface.co/funasr/fsmn-vad/resolve/df20e6b30c653645fa4ff125cacfcabd1020a669/README.md",
+    "directory": "speech_fsmn_vad_zh-cn-16k-common-pytorch"
+  },
+  {
+    "model": "iic/speech_campplus_sv_zh-cn_16k-common",
+    "directory": "speech_campplus_sv_zh-cn_16k-common",
+    "file": "examples/speaker1_a_cn_16k.wav",
+    "url": "https://modelscope.cn/api/v1/models/iic/speech_campplus_sv_zh-cn_16k-common/repo?Revision=master&FilePath=examples%2Fspeaker1_a_cn_16k.wav",
+    "sha256": "5f20ce0ddc378ca3239d3ce864b1142726a46a1221ae553912e4e142045df58b",
+    "bytes": 118932,
+    "testOnly": true
+  },
+  {
+    "model": "iic/speech_campplus_sv_zh-cn_16k-common",
+    "directory": "speech_campplus_sv_zh-cn_16k-common",
+    "file": "examples/speaker2_a_cn_16k.wav",
+    "url": "https://modelscope.cn/api/v1/models/iic/speech_campplus_sv_zh-cn_16k-common/repo?Revision=master&FilePath=examples%2Fspeaker2_a_cn_16k.wav",
+    "sha256": "8a6cffa452df32ef10503f7992f22ffcdd7f16c4e0273d13311bc5cdcb13abf4",
+    "bytes": 170028,
+    "testOnly": true
+  },
+  {
+    "model": "iic/speech_campplus_sv_zh-cn_16k-common",
+    "directory": "speech_campplus_sv_zh-cn_16k-common",
+    "file": "examples/speaker1_b_cn_16k.wav",
+    "url": "https://modelscope.cn/api/v1/models/iic/speech_campplus_sv_zh-cn_16k-common/repo?Revision=master&FilePath=examples%2Fspeaker1_b_cn_16k.wav",
+    "sha256": "20745dc08a4281894d146140b99b9ef7417ac681119b7f7202f553cdf1a85f65",
+    "bytes": 157058,
+    "testOnly": true
+  }
+]

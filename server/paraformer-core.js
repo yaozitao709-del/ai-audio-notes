@@ -2,7 +2,7 @@ import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
-import { streamAudio } from "./audio-tools.js";
+import { streamAudio, probeAudioDuration } from "./audio-tools.js";
 
 const require = createRequire(import.meta.url);
 const sampleRate = 16000;
@@ -89,6 +89,42 @@ export class ParaformerCore {
       elapsed_s: (performance.now() - started) / 1000,
       text: sentences.map(s => s.text).join("\n"), sentence_info: sentences
     };
+  }
+
+  async transcribeTurns(audioPath, turns) {
+    const started=performance.now();
+    const duration=await probeAudioDuration(audioPath);
+    if(!Array.isArray(turns))throw new Error('讲话人片段格式无效。');
+    let previous=0;
+    const parts=[];
+    for(const turn of turns){
+      if(!Number.isFinite(turn.start)||!Number.isFinite(turn.end)||turn.start<previous-.001||turn.start<0||turn.end<=turn.start||!Number.isSafeInteger(turn.spk)||turn.spk<0)throw new Error('讲话人片段时间或编号无效。');
+      if(turn.end>duration+.03)throw new Error('讲话人片段超出音频时长。');
+      // Bound recognizer state and paragraph length while preserving real audio positions.
+      for(let start=turn.start;start<turn.end-.001;start+=20)parts.push({...turn,start,end:Math.min(turn.end,start+20)});
+      previous=turn.end;
+    }
+    const sentences=[];let index=0,seen=0,stream;
+    const finish=()=>{
+      const part=parts[index],text=this.finish(stream);
+      if(text)sentences.push({start:part.start,end:part.end,spk:part.spk,text,clean_text:text});
+      stream=null;index++;
+    };
+    if(parts.length)await streamAudio(audioPath,samples=>{
+      const left=seen,right=seen+samples.length;
+      while(index<parts.length){
+        const part=parts[index],start=Math.round(part.start*sampleRate),end=Math.round(part.end*sampleRate);
+        if(start>=right)break;
+        if(end<=left){if(stream)finish();else index++;continue;}
+        stream ||= this.recognizer.createStream();
+        const selected=samples.subarray(Math.max(0,start-left),Math.min(samples.length,end-left));
+        for(let offset=0;offset<selected.length;offset+=frameSize){stream.acceptWaveform({samples:selected.subarray(offset,offset+frameSize),sampleRate});this.decode(stream,false);}
+        if(end<=right)finish();else break;
+      }
+      seen=right;
+    });
+    if(stream)finish();
+    return {model:'Paraformer streaming int8',time_unit:'seconds',timestamp_granularity:'speaker-turn',device:'cpu',duration_s:duration,elapsed_s:(performance.now()-started)/1000,text:sentences.map(s=>s.text).join('\n'),sentence_info:sentences};
   }
 
   transcribeLive({ sessionId, utteranceId, sequence, startSeconds, samples, final, sampleRate: rate = 16000 }) {

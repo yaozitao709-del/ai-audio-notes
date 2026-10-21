@@ -4,7 +4,7 @@
 
 ## 产品预览
 
-以下为发布版界面的真实截图，文字为专门编写的演示数据；不含个人录音、历史笔记或 API 密钥。首次使用时笔记列表为空。
+以下为基础功能的界面截图（演示内容；v0.2.0 另新增自动分人状态和重新分人按钮），文字为专门编写的演示数据；不含个人录音、历史笔记或 API 密钥。首次使用时笔记列表为空。
 
 **导入音频，或直接开始录音。** 首页集中管理笔记，右上角进入 AI 设置。
 
@@ -20,10 +20,10 @@
 
 ## 普通用户下载
 
-到 [Releases](https://github.com/yaozitao709-del/ai-audio-notes/releases/latest) 下载 **AI-Audio-Notes-v0.1.0-macos-arm64.zip**，不要下载 GitHub 自动生成的 Source code ZIP 来当安装包。
+到 [Releases](https://github.com/yaozitao709-del/ai-audio-notes/releases/latest) 下载 **AI-Audio-Notes-v0.2.0-macos-arm64.zip**，不要下载 GitHub 自动生成的 Source code ZIP 来当安装包。
 
 1. 完整解压到自己的电脑，保留整个文件夹。
-2. 双击 **启动AI录音纪要.command**。包内已带官方 Node.js 运行环境和 Paraformer 快速模型，常用运行依赖已附带，不需要安装 Homebrew、Python 或 Node.js。
+2. 双击 **启动AI录音纪要.command**。包内已带 Node.js、可迁移 Python 运行环境、Paraformer 快速模型及 VAD／CAM++ 分人模型，不需要自行安装 Homebrew、Python 或 Node.js。
 3. **第一次启动需要联网下载 FFmpeg/FFprobe 音频工具**；终端会显示进度。以后不会重复安装。浏览器自动打开本机页面。
 4. 点首页右上角 **AI 设置**，填写自己的 API Key。默认 DeepSeek Flash；高级设置支持兼容服务、自定义模型及“获取模型”列表。
 5. 测试连接、保存，之后即可导入音频或录音。双击 **关闭AI录音纪要.command** 停止后台。
@@ -36,31 +36,38 @@
 - 数据保存在自己的 `~/Library/Application Support/AI Audio Notes`。升级前先关闭旧版，重新下载时保留此目录即可；不要把它转发给别人。
 - 语音识别在本机完成，原音不会被本应用上传到 AI 服务。**校对与总结会把文字发送给用户自行配置的 AI 服务**，并遵循该服务的规则和费用。
 - API Key 保存在本机配置文件中，文件权限限制为当前用户；页面不回显完整旧密钥。分享应用时不要附带本机数据目录或 `.env`。
-- 不会自动识别讲话人。时间是段落/音频块定位参考，不是逐字字幕对齐。
+- 新导入自动区分讲话人；新录音在结束后完成分人。历史记录可点“重新区分讲话人”，处理前自动备份。编号表示录音内的声音身份，不是真实姓名。
+- v0.2.0 修复了少量异常声音导致两位主要讲话人被合并的问题；长录音使用谱聚类，苹果芯片优先使用 MPS/GPU，失败时回退 CPU。
+- 时间为声音片段定位参考，不是逐字对齐；短促插话、重叠讲话、相似声音仍可能误分。
 - 整理保留强调、犹豫、数字、否定与自我纠正，无法确定的地方可能继续保留原词；不保证消除所有识别错误。
 
 ## 开发者运行源码
 
-请从 GitHub 克隆源码后开发，不要直接修改分发包中的合并文件。需要苹果芯片 Mac 和 Node.js 26+：
+请从 GitHub 克隆源码后开发，不要直接修改分发包中的合并文件。需要苹果芯片 Mac、Node.js 26+ 和 Python 3.11：
 
 ```sh
 npm ci
 npm run setup:models
+npm run setup:speakers
+python3.11 -m venv .venv
+.venv/bin/python -m pip install -r requirements-speech.txt
+export SPEAKER_PYTHON="$PWD/.venv/bin/python"
 npm run build
 npm start
 ```
 
-源码仓库不存放大型模型和 Node 运行时。模型下载会校验 `MODEL_MANIFEST.json` 的 SHA256。`npm start` 使用现有运行依赖，不会修改全局 Node 配置。开发页面可分别运行 `npm run server` 和 `npm run dev`。
+源码仓库不存放大型模型及 Node/Python 运行时。模型下载会校验 `MODEL_MANIFEST.json` 和 `SPEAKER_MODEL_MANIFEST.json` 的 SHA256。`npm start` 使用现有运行依赖，不会修改全局 Node 配置。开发页面可分别运行 `npm run server` 和 `npm run dev`。
 
 ```sh
 # 完整测试需要上游公开测试音频（不是个人录音）
 node scripts/download-models.mjs --test
+node scripts/download-speaker-models.mjs --test
 npm test
 npm run test:asr
 npm run build
 ```
 
-`PORT`、`AI_AUDIO_DATA_ROOT`、`PARAFORMER_MODEL_DIR` 可选。端口被其他程序占用时启动器会提示，不会打开或停止其他程序。保存 AI 配置后新任务立即使用；已开始的录音继续使用原配置。
+`PORT`、`AI_AUDIO_DATA_ROOT`、`PARAFORMER_MODEL_DIR`、`SPEAKER_PYTHON`、`SPEAKER_MODEL_ROOT` 可选；源码开发可用 `SPEAKER_DIARIZATION=false` 关闭分人以运行纯快速转写。端口被其他程序占用时启动器会提示，不会打开或停止其他程序。保存 AI 配置后新任务立即使用；已开始的录音继续使用原配置。
 
 ## 许可与来源
 

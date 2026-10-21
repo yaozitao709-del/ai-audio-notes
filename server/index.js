@@ -10,6 +10,7 @@ import dotenv from "dotenv";
 import express from "express";
 import multer from "multer";
 import { FastAsr } from "./fast-asr.js";
+import { SpeakerAsr } from "./speaker-asr.js";
 import { AISettings } from "./ai-settings.js";
 import { createAIRuntime } from "./ai-runtime.js";
 import { proofreadNote } from "./note-proofreading.js";
@@ -45,13 +46,15 @@ const acceptedAudioExtensions = new Set([".mp3", ".m4a", ".wav", ".webm", ".ogg"
 const activeJobs = new Set();
 const noteWrites = new Map();
 const fastAsr = new FastAsr();
+const speakerAsr = new SpeakerAsr({fastAsr});
+const defaultSpeakerDiarization = process.env.SPEAKER_DIARIZATION !== 'false';
 const asrLabels = { fast: "Paraformer streaming int8" };
 function resolveAsrMode(value = "fast") {
   // Existing recordings and cached pages can still carry the removed mode.
   if (value !== "fast" && value !== "sensevoice") throw new Error("无效的转写设置，请刷新页面后重试。");
   return "fast";
 }
-const activeStatuses = new Set(["importing", "transcribing", "proofreading", "summarizing"]);
+const activeStatuses = new Set(["importing", "diarizing", "transcribing", "proofreading", "summarizing"]);
 const defaultTermFixes = [];
 
 function nowStamp() {
@@ -167,6 +170,7 @@ function publicNote(note) {
     proofreadingPath,
     summaryPath,
     exportPaths,
+    speakerBackupPath,
     ...safeNote
   } = note;
 
@@ -420,6 +424,8 @@ function buildTranscript(asrPayload, durationSeconds) {
       if (!text) return null;
       return {
         speaker: speakerLabel(sentence.spk ?? sentence.speaker),
+        startSeconds: asrTimeToSeconds(sentence.start ?? sentence.start_time, durationSeconds, asrPayload.time_unit),
+        endSeconds: asrTimeToSeconds(sentence.end ?? sentence.end_time, durationSeconds, asrPayload.time_unit),
         startTime: secondsToClock(asrTimeToSeconds(sentence.start ?? sentence.start_time, durationSeconds, asrPayload.time_unit)),
         endTime: secondsToClock(asrTimeToSeconds(sentence.end ?? sentence.end_time, durationSeconds, asrPayload.time_unit)),
         text
@@ -501,7 +507,7 @@ function fallbackSummary(note, transcript, reason) {
       },
       {
         title: "下一步生成 AI 纪要",
-        content: "在首页右上角打开 AI 设置，配置自己的服务和密钥后生成纪要。"
+        content: "在后端 .env 中填写 DEEPSEEK_API_KEY 后，可用 Flash 生成普通纪要，也可用 Pro 对重要会议重生成。"
       }
     ],
     chapters: chapters.length > 0 ? chapters : [
@@ -623,7 +629,7 @@ async function finishSummary(note, model, runtime) {
 async function markStageFailure(id, stage, error) {
   const current = await readNote(id);
   await updateNote(id, { status: "failed", failedStage: stage,
-    error: `${stage === "proofreading" ? "全文校对未完成" : stage === "summarizing" ? "总结未完成" : "转写未完成"}：${error?.message || "处理失败"}`,
+    error: `${stage === "proofreading" ? "全文校对未完成" : stage === "summarizing" ? "总结未完成" : stage === "diarizing" ? "讲话人区分未完成" : "转写未完成"}：${error?.message || "处理失败"}`,
     ...(stage === "proofreading" ? { proofreading: { ...current.proofreading, status: "failed" } } : {}) });
 }
 
@@ -638,17 +644,32 @@ async function processNote(id, options = {}) {
     if (!options.resume || !note.rawTranscriptPath) {
       note = await updateNote(id, { status: "transcribing", error: "", failedStage: "", processingStartedAt: nowStamp(),
         transcriptEditedAt: undefined, proofreading: undefined, proofreadingPath: undefined, rawTranscriptPath: undefined });
-      const asrPayload = await fastAsr.transcribeFile(note.audioPath);
+      let asrPayload;
+      if(note.speakerDiarization ?? defaultSpeakerDiarization){
+        stage='diarizing';
+        await updateNote(id,{status:'diarizing',speakerRecognition:{status:'processing'}});
+        let lastProgress=0;
+        asrPayload=await speakerAsr.transcribeFile(note.audioPath,{speakerCount:note.speakerCount || undefined,onProgress:progress=>{
+          if(progress.stage==='transcribing')stage='transcribing';
+          if(Date.now()-lastProgress>1500 || progress.stage==='transcribing'){
+            lastProgress=Date.now();
+            updateNote(id,{status:stage,speakerProgress:progress}).catch(()=>{});
+          }
+        }});
+      }else asrPayload=await fastAsr.transcribeFile(note.audioPath);
       if (!String(asrPayload.text || "").trim()) throw new Error("音频中没有识别到语音文字，请检查录音后重试。");
       const transcriptPath = path.join(transcriptDir, `${id}.paraformer.json`);
       await writeJson(transcriptPath, { ...asrPayload, audio: note.audioPath });
       const durationSeconds = asrPayload.duration_s || await probeDuration(note.audioPath);
       rawTranscript = normalizeTranscriptPayload(buildTranscript(asrPayload, durationSeconds));
       note = await updateNote(id, { duration: secondsToClock(durationSeconds), transcript: rawTranscript, transcriptPath,
-        asrMode: "fast", asrElapsedSeconds: asrPayload.elapsed_s, modelInfo: { ...note.modelInfo, asr: asrLabels.fast } });
+        asrMode: "fast", asrElapsedSeconds: asrPayload.elapsed_s,
+        speakerRecognition:asrPayload.diarization || {status:'disabled'},speakerCount:asrPayload.speakerCount,
+        modelInfo: { ...note.modelInfo, asr: asrPayload.model || asrLabels.fast } });
     }
     stage = "proofreading";
     note = await ensureProofread(note, rawTranscript, runtime);
+    if(note.summaryRequested===false){await updateNote(id,{status:'done',error:'',failedStage:'',processingFinishedAt:nowStamp()});return;}
     stage = "summarizing";
     await finishSummary(note, options.model || runtime.summaryModel, runtime);
   } catch (error) { await markStageFailure(id, stage, error).catch(() => {}); }
@@ -1128,6 +1149,7 @@ app.post("/api/notes/import", upload.single("audio"), async (req, res, next) => 
       keywords: ["本地导入", "转写中"],
       summaryLead: "音频已保存，正在快速转写。",
       asrMode,
+      speakerDiarization:defaultSpeakerDiarization && req.body?.speakerDiarization !== 'false',
       summaryItems: [],
       chapters: [],
       transcript: [
@@ -1164,7 +1186,8 @@ app.post("/api/notes/live-finalize", upload.single("audio"), async (req, res, ne
     }
     const transcript = normalizeTranscriptPayload(parsedTranscript).map(({ isInterim: _isInterim, ...line }) => line);
     // Persist the audio even if live recognition failed; full-file recognition can recover it.
-    const needsFileTranscription = transcript.length === 0 || req.body?.forceTranscription === "true";
+    const speakerDiarization=defaultSpeakerDiarization && req.body?.speakerDiarization !== 'false';
+    const needsFileTranscription = speakerDiarization || transcript.length === 0 || req.body?.forceTranscription === "true";
 
     const id = req.uploadNoteId;
     const now = Date.now();
@@ -1179,6 +1202,7 @@ app.post("/api/notes/live-finalize", upload.single("audio"), async (req, res, ne
       createdAtMs: now,
       status: needsFileTranscription ? "transcribing" : "proofreading",
       asrMode,
+      speakerDiarization,
       error: "",
       keywords: ["实时转录", "句末纠错", "总结中"],
       summaryLead: needsFileTranscription ? "录音已保存，正在完成转写。" : "实时转录已完成，正在校对全文。",
@@ -1233,6 +1257,20 @@ app.post("/api/notes/:id/resummarize", async (req, res, next) => {
   }
 });
 
+app.post('/api/notes/:id/speakers',async(req,res,next)=>{
+  try{
+    if(activeJobs.has(req.params.id))throw new Error('这条录音正在处理中。');
+    const count=req.body?.speakerCount;
+    if(count!==undefined && (!Number.isSafeInteger(count)||count<1||count>8))throw new Error('讲话人数须为1到8，或留空自动识别。');
+    const current=await readNote(req.params.id);
+    const backup=path.join(dataRoot,'backups',`${current.id}.before-speakers.${Date.now()}.json`);
+    await writeJson(backup,current);
+    const note=await updateNote(current.id,{status:'diarizing',error:'',speakerDiarization:true,speakerCount:count,speakerBackupPath:backup});
+    processNote(current.id,{runtime:aiRuntime.capture()});
+    res.json({note:publicNote(note)});
+  }catch(error){next(error);}
+});
+
 app.post("/api/notes/:id/export/:type", async (req, res, next) => {
   try {
     const note = await readNote(req.params.id);
@@ -1266,6 +1304,7 @@ const server = app.listen(port, host, () => {
 
 async function shutdown() {
   server.close();
+  await speakerAsr.close();
   await fastAsr.close();
   process.exit(0);
 }
