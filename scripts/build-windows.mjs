@@ -1,3 +1,4 @@
+import {packageSources} from './package-files.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -9,7 +10,7 @@ const parent=path.resolve(output),app=path.join(parent,mode==='lite'?'AI-Audio-N
 await fs.mkdir(app,{recursive:true});
 const copy=async(src,dest)=>{await fs.mkdir(path.dirname(dest),{recursive:true});await fs.cp(src,dest,{recursive:true,dereference:true,filter:p=>!/(?:^|[\\/])(?:__pycache__|\.git)(?:[\\/]|$)|\.pyc$/.test(p)});};
 if(mode==='lite'){
- const files=(await run('git',['ls-files'],{cwd:root})).trim().split(/\r?\n/);
+ const files=await packageSources(root);
  for(const name of files){
   if(/^(?:\.github\/|src\/|docs\/)|\.test\.(?:js|mjs)$|^\./.test(name)||name.endsWith('.command'))continue;
   await copy(path.join(root,name),path.join(app,name));

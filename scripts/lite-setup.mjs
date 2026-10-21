@@ -77,7 +77,7 @@ async function copyVc(app,destination){
   const source=path.join(app,'support-vc');
   const manifest=await readJson(path.join(source,'MANIFEST.json'));
   await fs.mkdir(destination,{recursive:true});
-  for(const [file,sha256] of Object.entries(manifest.files)){if(!await matches(path.join(source,file),{sha256}))throw new Error('VC 运行库校验失败。');await fs.copyFile(path.join(source,file),path.join(destination,file));}
+  for(const [file,sha256] of Object.entries(manifest.files)){if(!await matches(path.join(source,file),{sha256}))throw new Error('VC 运行库校验失败。');if(!await matches(path.join(destination,file),{sha256}))await fs.copyFile(path.join(source,file),path.join(destination,file));}
 }
 async function prepareNative(app,cache,roots,info,report,log){
   const destination=path.join(app,'node_modules',info.name),cached=path.join(cache,'native',info.name+'-'+info.version);
