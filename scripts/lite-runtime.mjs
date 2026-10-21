@@ -67,9 +67,10 @@ export async function acquireLock(cache){
   throw new Error('无法取得安装锁。');
 }
 export async function extractTar(archive,destination,{strip=0}={}){
-  const listing=await run(systemTool('tar'),['-tzf',archive]);
+  const cwd=path.dirname(archive),archiveName=path.basename(archive);
+  const listing=await run(systemTool('tar'),['-tzf',archiveName],{cwd});
   if(listing.split('\n').filter(Boolean).some(n=>n.startsWith('/')||n.split('/').includes('..')))throw new Error('压缩包路径无效。');
   const temporary=destination+'.unpacking-'+crypto.randomUUID();await fs.mkdir(temporary,{recursive:true});
-  try{await run(systemTool('tar'),['-xzf',archive,'-C',temporary,...(strip?['--strip-components='+strip]:[])]);await fs.rm(destination,{recursive:true,force:true});await fs.rename(temporary,destination);}
+  try{await run(systemTool('tar'),['-xzf',archiveName,'-C',path.relative(cwd,temporary),...(strip?['--strip-components='+strip]:[])],{cwd});await fs.rm(destination,{recursive:true,force:true});await fs.rename(temporary,destination);}
   finally{await fs.rm(temporary,{recursive:true,force:true});}
 }

@@ -21,10 +21,10 @@ export async function ensureAudioTools(root){
       if(downloaded.status!==0)throw new Error('音频工具下载失败，请检查网络后重新启动。');
       const hash=crypto.createHash('sha512').update(await fs.readFile(archive)).digest('base64');
       if(`sha512-${hash}`!==info.integrity)throw new Error('音频工具完整性校验失败，未安装。');
-      const listing=spawnSync(systemTool('tar'),['-tzf',archive],{encoding:'utf8'});
+      const listing=spawnSync(systemTool('tar'),['-tzf','package.tgz'],{cwd:temporary,windowsHide:true,encoding:'utf8'});
       if(listing.status!==0 || listing.stdout.split('\n').filter(Boolean).some(p=>!p.startsWith('package/') || p.split('/').includes('..')))throw new Error('音频工具压缩包路径无效。');
       await fs.mkdir(unpacked);
-      const extracted=spawnSync(systemTool('tar'),['-xzf',archive,'-C',unpacked,'--strip-components=1'],{windowsHide:true,stdio:'inherit'});
+      const extracted=spawnSync(systemTool('tar'),['-xzf','package.tgz','-C','unpacked','--strip-components=1'],{cwd:temporary,windowsHide:true,stdio:'inherit'});
       if(extracted.status!==0)throw new Error('音频工具解压失败。');
       await fs.access(path.join(unpacked,info.binary+profile().suffix));
       await fs.chmod(path.join(unpacked,info.binary+profile().suffix),0o755);

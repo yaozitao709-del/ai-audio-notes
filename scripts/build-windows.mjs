@@ -33,12 +33,14 @@ if(mode==='lite'){
  await copy(path.join(cache,'speech-env/Lib/site-packages'),path.join(app,'runtime/python/Lib/site-packages'));
  await fs.rm(path.join(app,'runtime/python/Lib/site-packages/audio-notes-existing-env.pth'),{force:true});
  await copy(path.join(cache,'node-v26.11.1-win-x64/node.exe'),path.join(app,'runtime/node.exe'));
+ await copy(path.join(cache,'node-v26.11.1-win-x64/LICENSE'),path.join(app,'runtime/LICENSE'));
  await copy(prepared.models.PARAFORMER_MODEL_DIR,path.join(app,'models/paraformer-streaming'));
  await copy(prepared.models.SPEAKER_MODEL_ROOT,path.join(app,'models/speakers'));
  // Fixtures are test data, not application requirements.
  await fs.rm(path.join(app,'models/paraformer-streaming/test_wavs'),{recursive:true,force:true});
  await fs.rm(path.join(app,'models/speakers/speech_campplus_sv_zh-cn_16k-common/examples'),{recursive:true,force:true});
- for(const name of ['ffmpeg','ffprobe'])await copy(path.join(cache,'audio',`@${name}-installer/win32-x64`),path.join(app,'node_modules',`@${name}-installer/win32-x64`));
+ // Like the Mac full release, audio binaries are fetched from upstream on first launch.
+ // Their redistribution/source obligations are not replaced by a copied npm README.
  for(const f of await fs.readdir(path.join(app,'support-vc')))if(f.endsWith('.dll'))for(const dest of ['runtime','runtime/python','node_modules/sherpa-onnx-win-x64'])await copy(path.join(app,'support-vc',f),path.join(app,dest,f));
  // Installer caches and external environment metadata must never ship.
  for(const folder of [path.join(app,'runtime/python/Lib/site-packages')]){

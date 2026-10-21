@@ -53,3 +53,12 @@ test('two installers cannot modify the same cache concurrently',async t=>{
   const release=await acquireLock(dir);await assert.rejects(acquireLock(dir),/正在|running/);
   await release();const release2=await acquireLock(dir);await release2();
 });
+
+test('extract tar archives under Chinese user directories',async t=>{
+ const {extractTar,run}=await import('./lite-runtime.mjs');const {systemTool}=await import('../server/platform.js');
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'解压 目录 '));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+ await fs.mkdir(path.join(dir,'input'));await fs.writeFile(path.join(dir,'input/value.txt'),'verified archive');
+ await run(systemTool('tar'),['-czf','fixture.tar.gz','input'],{cwd:dir});
+ await extractTar(path.join(dir,'fixture.tar.gz'),path.join(dir,'unpacked'),{strip:1});
+ assert.equal(await fs.readFile(path.join(dir,'unpacked/value.txt'),'utf8'),'verified archive');
+});
