@@ -16,6 +16,10 @@ test('unsupported Windows architecture and old OS are rejected',()=>{
 });
 test('Python selection rejects x86 and accepts Windows AMD64',()=>{
  assert.ok(pythonArchMatches('AMD64','x64'));assert.ok(pythonArchMatches('x86_64','x64'));assert.ok(!pythonArchMatches('x86','x64'));
- const r={version:[3,11,17],arch:'AMD64',packages:{numpy:'2.4.6'},executable:'python.exe'};
+ const r={version:[3,11,17],arch:'AMD64',bits:64,packages:{numpy:'2.4.6'},executable:'python.exe'};
  assert.equal(choosePython({numpy:'2.4.6'},[r],'x64').executable,'python.exe');assert.equal(choosePython({},[r],'arm64'),null);
+});
+
+test('32-bit Python on an x64 Windows OS is not a compatible runtime',()=>{
+ assert.equal(choosePython({},[{version:[3,11,17],arch:'AMD64',bits:32,packages:{}}],'x64'),null);
 });

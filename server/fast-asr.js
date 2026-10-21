@@ -1,10 +1,13 @@
+import {fork} from 'node:child_process';
+import path from 'node:path';
 import { Worker } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
 
 export const defaultModelDir = fileURLToPath(new URL("../models/paraformer-streaming/", import.meta.url));
 
 export class FastAsr {
-  constructor({ modelDir = process.env.PARAFORMER_MODEL_DIR || defaultModelDir } = {}) {
+  constructor({ modelDir = process.env.PARAFORMER_MODEL_DIR || defaultModelDir, transport = process.platform==='win32'?'process':'thread' } = {}) {
+    this.transport = transport;
     this.modelDir = modelDir;
     this.pending = new Map();
     this.sequence = 0;
@@ -12,7 +15,18 @@ export class FastAsr {
 
   async start() {
     if (this.ready) return this.ready;
-    this.worker = new Worker(new URL("./asr-worker.js", import.meta.url), { workerData: { modelDir: this.modelDir } });
+    if(this.transport==='process'){
+      // sherpa's Windows file validation uses narrow paths. Relative ASCII model
+      // filenames work from a Unicode cwd without copying or renaming models.
+      const child=fork(fileURLToPath(new URL('./asr-worker.js',import.meta.url)),[],{
+        cwd:path.resolve(this.modelDir),execArgv:[],windowsHide:true,serialization:'advanced',stdio:['ignore','inherit','inherit','ipc']
+      });
+      this.worker={
+        on:child.on.bind(child),
+        postMessage:message=>child.send(message),
+        terminate:()=>new Promise(resolve=>{if(child.exitCode!==null||child.signalCode!==null)return resolve();child.once('exit',resolve);child.kill();})
+      };
+    }else this.worker = new Worker(new URL("./asr-worker.js", import.meta.url), { workerData: { modelDir: this.modelDir } });
     const worker = this.worker;
     this.ready = new Promise((resolve, reject) => {
       const fail = error => {
@@ -45,8 +59,8 @@ export class FastAsr {
   }
 
   health() { return this.request("health"); }
-  transcribeFile(audioPath) { return this.request("file", audioPath); }
-  transcribeTurns(audioPath, turns) { return this.request("turns", {audioPath, turns}); }
+  transcribeFile(audioPath) { return this.request("file", path.resolve(audioPath)); }
+  transcribeTurns(audioPath, turns) { return this.request("turns", {audioPath:path.resolve(audioPath), turns}); }
   transcribeLive(payload) { return this.request("live", payload); }
   clearSession(sessionId) { return this.request("clear", sessionId); }
   async close() { if (this.worker) await this.worker.terminate(); }

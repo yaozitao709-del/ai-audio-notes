@@ -1,3 +1,4 @@
+import {protectPrivateFile} from './private-files.js';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -30,14 +31,13 @@ export class AISettings {
 
   async init() {
     let saved;
-    try {saved=JSON.parse(await fs.readFile(this.filename,'utf8'));}
+    try {await fs.access(this.filename);await protectPrivateFile(this.filename);saved=JSON.parse(await fs.readFile(this.filename,'utf8'));}
     catch(error) {if(error.code!=='ENOENT')throw new Error('本机 AI 配置文件读取失败，请检查配置文件。');}
     const values=normalize(saved || this.defaults,{allowEmptyKey:true});
     this.value=Object.freeze({...values,
       proofreadingModel:saved?values.model:(this.defaults.proofreadingModel || values.model),
       revision:saved?.revision || `env-${digest(values).slice(0,24)}`,
       updatedAt:saved?.updatedAt || null,source:saved?'file':'env'});
-    if(saved)await fs.chmod(this.filename,0o600);
     return this.public();
   }
 
@@ -67,7 +67,8 @@ export class AISettings {
       await fs.mkdir(path.dirname(this.filename),{recursive:true,mode:0o700});
       const temp=`${this.filename}.${crypto.randomUUID()}.tmp`;
       try {
-        await fs.writeFile(temp,JSON.stringify(saved,null,2),{mode:0o600,flag:'wx'});
+        const handle=await fs.open(temp,'wx',0o600);
+        try{await protectPrivateFile(temp);await handle.writeFile(JSON.stringify(saved,null,2));}finally{await handle.close();}
         await fs.rename(temp,this.filename);
       } catch(error) {await fs.unlink(temp).catch(()=>{});throw new Error('AI 设置保存失败，原配置保持不变。');}
       this.value=Object.freeze({...saved,proofreadingModel:saved.model,source:'file'});

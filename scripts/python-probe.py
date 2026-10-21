@@ -5,6 +5,7 @@ import platform
 import site
 import sys
 import sysconfig
+import struct
 import os
 
 packages = {}
@@ -19,7 +20,7 @@ paths = list(dict.fromkeys(list(site.getsitepackages()) + distribution_paths))
 if site.ENABLE_USER_SITE:
     paths.append(site.getusersitepackages())
 print(json.dumps({'executable': sys.executable, 'version': list(sys.version_info[:3]),
-                  'arch': platform.machine(), 'packages': packages,
+                  'arch': platform.machine(), 'bits': struct.calcsize('P') * 8, 'packages': packages,
                   'prefix': sys.prefix, 'basePrefix': sys.base_prefix,
                   'sitePackages': sysconfig.get_path('purelib'),
                   'sitePaths': [p for p in paths if os.path.isdir(p)]}))

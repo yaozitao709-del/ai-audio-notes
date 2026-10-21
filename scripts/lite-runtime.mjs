@@ -11,7 +11,7 @@ export function missingPackages(required,installed={}){
   return Object.keys(required).filter(n=>normalized[canonical(n)]!==required[n]);
 }
 export function choosePython(required,reports,arch=process.arch){
-  return reports.filter(r=>r && r.version?.[0]===3 && r.version[1]===11 && pythonArchMatches(r.arch,arch))
+  return reports.filter(r=>r && r.bits===64 && r.version?.[0]===3 && r.version[1]===11 && pythonArchMatches(r.arch,arch))
     .map(r=>({...r,missing:missingPackages(required,r.packages)}))
     .sort((a,b)=>a.missing.length-b.missing.length)[0] || null;
 }

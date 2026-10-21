@@ -1,10 +1,12 @@
 import { parentPort, workerData } from "node:worker_threads";
 import { ParaformerCore } from "./paraformer-core.js";
 
-const engine = new ParaformerCore(workerData.modelDir);
-parentPort.postMessage({ ready: true, loadSeconds: engine.loadSeconds });
+const port=parentPort || {postMessage:message=>process.send(message),on:process.on.bind(process)};
+if(!parentPort)process.once('disconnect',()=>process.exit(0));
+const engine = new ParaformerCore(parentPort?workerData.modelDir:'.');
+port.postMessage({ ready: true, loadSeconds: engine.loadSeconds });
 let queue = Promise.resolve();
-parentPort.on("message", ({ id, method, payload }) => {
+port.on("message", ({ id, method, payload }) => {
   queue = queue.then(async () => {
     try {
       let result;
@@ -14,7 +16,7 @@ parentPort.on("message", ({ id, method, payload }) => {
       else if (method === "clear") result = engine.clearSession(payload);
       else if (method === "health") result = { status: "ready", model: "Paraformer streaming int8", loadSeconds: engine.loadSeconds };
       else throw new Error("未知识别任务。");
-      parentPort.postMessage({ id, result });
-    } catch (error) { parentPort.postMessage({ id, error: error.message || String(error) }); }
+      port.postMessage({ id, result });
+    } catch (error) { port.postMessage({ id, error: error.message || String(error) }); }
   });
 });

@@ -75,3 +75,15 @@ test("FFmpeg decodes imported m4a and webm and reports their durations", async (
   assert.equal(await probeAudioDuration(recording, { decodeIfUnknown: false }), 0);
   assert.ok(await probeAudioDuration(recording) > 9.9);
 });
+
+
+test("process transport preserves live typed arrays, relative audio paths and the parent working directory", {timeout:120000}, async t=>{
+  const cwd=process.cwd(),engine=new FastAsr({modelDir,transport:'process'});
+  t.after(()=>engine.close());
+  const health=await engine.health();assert.equal(health.status,'ready');
+  const result=await engine.transcribeFile(path.relative(cwd,fixture));assert.ok(result.text.trim());
+  assert.equal(process.cwd(),cwd);
+  const live=await engine.transcribeLive({sessionId:'process-ipc',utteranceId:0,startSeconds:0,sequence:0,samples:await decodeAudio(fixture),sampleRate:16000,final:true});
+  assert.match(live.text,/昨天/);
+  await engine.clearSession('process-ipc');
+});

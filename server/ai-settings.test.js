@@ -1,3 +1,6 @@
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+import {systemTool} from './platform.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -27,7 +30,10 @@ test('settings persist privately, reload without exposing keys and keep blank ke
   const saved=await store.save({provider:'deepseek',baseUrl:'https://api.deepseek.com/',model:'another-model',apiKey:''});
   assert.equal(saved.model,'another-model');assert.equal(store.snapshot().apiKey,'fixture-secret');
   assert.equal(original.model,'deepseek-flash');assert.notEqual(saved.revision,original.revision);
-  assert.equal((await fs.stat(filename)).mode&0o777,0o600);
+  if(process.platform==='win32'){
+    const check="$ErrorActionPreference='Stop'; $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User; $acl=[IO.File]::GetAccessControl($env:AI_AUDIO_PRIVATE_FILE); $rules=@($acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier])); if(-not $acl.AreAccessRulesProtected -or $rules.Count -ne 1 -or $rules[0].IdentityReference.Value -ne $sid.Value -or $rules[0].AccessControlType -ne 'Allow'){throw 'Credentials must have a protected current-user-only ACL'}";
+    await promisify(execFile)(systemTool('WindowsPowerShell/v1.0/powershell'),['-NoProfile','-NonInteractive','-Command',check],{windowsHide:true,timeout:15000,env:{...process.env,AI_AUDIO_PRIVATE_FILE:filename}});
+  }else assert.equal((await fs.stat(filename)).mode&0o777,0o600);
   const other=new AISettings({filename,defaults});await other.init();
   assert.equal(other.public().model,'another-model');assert.equal(other.snapshot().apiKey,'fixture-secret');
   assert.equal(other.public().revision,saved.revision);

@@ -10,7 +10,7 @@ import {choosePython,missingPackages,ensureFile,acquireLock} from './lite-runtim
 
 test('reuse complete compatible environments and report only missing or incompatible packages',()=>{
   const required={torch:'2.12.1',funasr:'1.3.14'};
-  const partial={executable:'/partial/python',version:[3,11,17],arch:'arm64',packages:{torch:'2.12.1'}};
+  const partial={executable:'/partial/python',version:[3,11,17],arch:'arm64',bits:64,packages:{torch:'2.12.1'}};
   const full={...partial,executable:'/existing/python',packages:required};
   assert.equal(choosePython(required,[{...full,version:[3,12,1]},partial,full],'arm64').executable,'/existing/python');
   assert.deepEqual(missingPackages(required,partial.packages),['funasr']);
