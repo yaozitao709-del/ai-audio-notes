@@ -1,3 +1,4 @@
+import {profile} from './platform.js';
 import {spawn} from 'node:child_process';
 import readline from 'node:readline';
 import path from 'node:path';
@@ -8,8 +9,8 @@ export class SpeakerDiarizer {
   constructor() { this.pending=new Map();this.sequence=0; }
   async start() {
     if(this.ready)return this.ready;
-    const python=process.env.SPEAKER_PYTHON || fileURLToPath(new URL('../runtime/python/bin/python3',import.meta.url));
-    const child=this.child=spawn(python,['-u',fileURLToPath(new URL('./speaker_worker.py',import.meta.url))],{stdio:['pipe','pipe','pipe']});
+    const python=process.env.SPEAKER_PYTHON || fileURLToPath(new URL('../runtime/python/'+profile().python,import.meta.url));
+    const child=this.child=spawn(python,['-X','utf8','-u',fileURLToPath(new URL('./speaker_worker.py',import.meta.url))],{windowsHide:true,stdio:['pipe','pipe','pipe']});
     this.ready=new Promise((resolve,reject)=>{
       const fail=()=>{
         if(this.child!==child)return;

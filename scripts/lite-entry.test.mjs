@@ -10,7 +10,7 @@ test('lightweight CLI still executes when launched through an aliased directory'
   const dir=await fs.mkdtemp(path.join(os.tmpdir(),'lite-entry-'));
   t.after(()=>fs.rm(dir,{recursive:true,force:true}));
   const alias=path.join(dir,'app-alias');
-  await fs.symlink(fileURLToPath(new URL('../',import.meta.url)),alias);
+  await fs.symlink(fileURLToPath(new URL('../',import.meta.url)),alias,process.platform==='win32'?'junction':undefined);
   const result=spawnSync(process.execPath,[path.join(alias,'scripts/lite-setup.mjs'),'stop'],{
     env:{...process.env,AI_AUDIO_DATA_ROOT:path.join(dir,'empty-data')},encoding:'utf8',timeout:15000
   });

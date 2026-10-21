@@ -12,10 +12,10 @@ test('reuse complete compatible environments and report only missing or incompat
   const required={torch:'2.12.1',funasr:'1.3.14'};
   const partial={executable:'/partial/python',version:[3,11,17],arch:'arm64',packages:{torch:'2.12.1'}};
   const full={...partial,executable:'/existing/python',packages:required};
-  assert.equal(choosePython(required,[{...full,version:[3,12,1]},partial,full]).executable,'/existing/python');
+  assert.equal(choosePython(required,[{...full,version:[3,12,1]},partial,full],'arm64').executable,'/existing/python');
   assert.deepEqual(missingPackages(required,partial.packages),['funasr']);
   assert.deepEqual(missingPackages(required,{torch:'2.11.0',funasr:'1.3.14'}),['torch']);
-  assert.equal(choosePython(required,[{...full,arch:'x86_64'}]),null);
+  assert.equal(choosePython(required,[{...full,arch:'x86_64'}],'arm64'),null);
 });
 async function fixture(t){
   const dir=await fs.mkdtemp(path.join(os.tmpdir(),'lite installer 中文 '));

@@ -1,0 +1,50 @@
+{
+  "version": "0.4.0",
+  "python": {
+    "version": "3.11.17",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261020/cpython-3.11.17%2B20261020-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+    "sha256": "61c04fc3f6d0cbf28036702b0b46af63a17addadff558f1e5a7f1e66519f2992"
+  },
+  "native": {
+    "name": "sherpa-onnx-win-x64",
+    "version": "1.13.3",
+    "url": "https://registry.npmjs.org/sherpa-onnx-win-x64/-/sherpa-onnx-win-x64-1.13.3.tgz",
+    "integrity": "sha512-ZQzcSmFvZK4jzmtWckqxocDUuEjYnBV2MHrDD21HPTeUMfGdE9yfvuSPpesIVfdzKbQzIQY42RAcfZEGWu0FbQ==",
+    "files": {
+      "onnxruntime_providers_shared.dll": "62f865e9fbe497f15d5a589b644d41e4723501e352a83571697fcd1f191c8db8",
+      "onnxruntime.dll": "756c938b0f2d14c45c7ad469c6429041d7e905ee6c6ad6049aa67ce937567e97",
+      "sherpa-onnx-c-api.dll": "e525129a149317df136b16aed97b1930b3d0d86acc94bd0ec46be95b67baf592",
+      "sherpa-onnx-cxx-api.dll": "27801cbb636aec5a95b6ed07382721acbb0226813dac3273958b7a783756a355",
+      "index.js": "b6db53e997183ee97dd3f565ac0caea4d98f8f8d931c22ba91e0986700f760bc",
+      "package.json": "a40b22815b7816cc2825628570d42155cdd6ee9f052fc7d5142ca9c436b02a65",
+      "README.md": "33cc04186235622d194a4bfe157e50dfa5f99079ceed97d19ace4cb54067d2ed",
+      "sherpa-onnx.node": "825573dbe623da3235fa01afb7b1b6b37f435eae87f794e129726296b777ca3f"
+    }
+  },
+  "portableWheels": [
+    {
+      "name": "crcmod",
+      "version": "1.7",
+      "filename": "crcmod-1.7-py3-none-any.whl",
+      "url": "https://github.com/yaozitao709-del/ai-audio-notes/releases/download/v0.3.0/crcmod-1.7-py3-none-any.whl",
+      "sha256": "f81128043ad072733753fe3f88ececeacd866ed92bad1b94af86e761a1b10c5c"
+    },
+    {
+      "name": "torch",
+      "filename": "torch-2.11.0+cpu-cp311-cp311-win_amd64.whl",
+      "url": "https://download-r2.pytorch.org/whl/cpu/torch-2.11.0%2Bcpu-cp311-cp311-win_amd64.whl",
+      "sha256": "51a221769d4a316f4b47a786c12e67c3f4807db8ed13c7b8817ebe73786acbbc"
+    },
+    {
+      "name": "torchaudio",
+      "filename": "torchaudio-2.11.0+cpu-cp311-cp311-win_amd64.whl",
+      "url": "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.11.0%2Bcpu-cp311-cp311-win_amd64.whl",
+      "sha256": "abbff04127caf6e16e3a7c3e1ca2739b68899e14926d7cbec4bd8b40f72375d5"
+    }
+  ],
+  "node": {
+    "version": "26.11.1",
+    "url": "https://nodejs.org/dist/v26.11.1/node-v26.11.1-win-x64.zip",
+    "sha256": "97f36a8a9684ff0d3e35758b4610fef5b628a5880e96f2ccc11240e5daf9934e"
+  }
+}

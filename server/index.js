@@ -1,3 +1,4 @@
+import {defaultDataRoot} from './platform.js';
 import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 import { createReadStream, existsSync } from "node:fs";
@@ -23,7 +24,7 @@ dotenv.config({ path: path.join(appDir, ".env") });
 const host = "127.0.0.1";
 const port = Number(process.env.PORT || 8787);
 const toolRoot = process.env.AI_TOOL_ROOT || path.join(os.homedir(), "AI本地工具");
-const dataRoot = process.env.AI_AUDIO_DATA_ROOT || path.join(os.homedir(), "Library", "Application Support", "AI Audio Notes");
+const dataRoot = defaultDataRoot();
 const audioDir = path.join(dataRoot, "audio");
 const notesDir = path.join(dataRoot, "notes");
 const transcriptDir = path.join(dataRoot, "transcripts");
@@ -319,6 +320,7 @@ async function deleteNoteData(id) {
 function runProcess(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
+      windowsHide: true,
       cwd: options.cwd || appDir,
       env: { ...process.env, ...(options.env || {}) },
       stdio: ["ignore", "pipe", "pipe"]
@@ -850,6 +852,7 @@ function createExportHtml(note, settings) {
 function findChromePath() {
   const candidates = [
     process.env.CHROME_PATH,
+    ...[process.env.PROGRAMFILES,process.env["PROGRAMFILES(X86)"],process.env.LOCALAPPDATA].filter(Boolean).flatMap(base=>[path.join(base,"Google/Chrome/Application/chrome.exe"),path.join(base,"Microsoft/Edge/Application/msedge.exe")]),
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"

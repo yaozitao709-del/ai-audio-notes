@@ -1,4 +1,4 @@
-name: Windows validation
+name: Windows validation and packages
 on:
   push:
     branches: [windows-support]
@@ -6,12 +6,96 @@ on:
 permissions:
   contents: read
 jobs:
-  platform:
+  windows:
     runs-on: windows-2022
+    timeout-minutes: 60
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+      AI_AUDIO_NO_PAUSE: '1'
+      AI_AUDIO_NO_OPEN: '1'
     steps:
-      - name: Verify Windows runner
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26.11.1
+          cache: npm
+      - name: Build and unit tests
         shell: pwsh
         run: |
-          [System.Environment]::OSVersion.VersionString
-          node --version
-          python --version
+          npm ci
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm test
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm run test:installer
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm run build
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm run bundle:server
+          exit $LASTEXITCODE
+      - name: Build lite with app-local Microsoft runtime
+        shell: pwsh
+        run: |
+          $crt=Get-ChildItem 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC\*\x64\Microsoft.VC143.CRT' -Directory | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $crt) { throw 'Official Visual Studio x64 CRT directory missing' }
+          $env:VC_REDIST_DIR=$crt.FullName
+          $work=Join-Path $env:RUNNER_TEMP '音频 Windows test'
+          "WIN_TEST_ROOT=$work" >> $env:GITHUB_ENV
+          New-Item -ItemType Directory -Force -Path $work | Out-Null
+          node scripts/build-windows.mjs lite $work
+          exit $LASTEXITCODE
+      - name: Cold lite installation through double-click launcher
+        shell: pwsh
+        run: |
+          $env:AI_AUDIO_CACHE_DIR=Join-Path $env:WIN_TEST_ROOT 'cold-cache'
+          $env:AI_AUDIO_DATA_ROOT=Join-Path $env:WIN_TEST_ROOT 'cold-data'
+          $env:PATH="$env:SystemRoot;$env:SystemRoot\System32"
+          Remove-Item Env:CONDA_PREFIX,Env:VIRTUAL_ENV,Env:SPEAKER_PYTHON,Env:PYTHONPATH -ErrorAction SilentlyContinue
+          & (Join-Path $env:WIN_TEST_ROOT 'AI-Audio-Notes-Lite\Prepare.cmd')
+          exit $LASTEXITCODE
+      - name: Verify lite reuse, transcription, diarization and exports
+        shell: pwsh
+        run: |
+          node scripts/windows-validation.mjs $env:WIN_TEST_ROOT (Join-Path $env:WIN_TEST_ROOT 'AI-Audio-Notes-Lite')
+          exit $LASTEXITCODE
+      - name: Build full only after lite passes
+        shell: pwsh
+        run: |
+          node scripts/build-windows.mjs full $env:WIN_TEST_ROOT (Join-Path $env:WIN_TEST_ROOT 'cold-cache')
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $moved=Join-Path $env:WIN_TEST_ROOT '搬家 Full package'
+          Move-Item -LiteralPath (Join-Path $env:WIN_TEST_ROOT 'AI-Audio-Notes') -Destination $moved
+          node scripts/windows-acceptance.mjs $env:WIN_TEST_ROOT full $moved
+          exit $LASTEXITCODE
+      - name: Package validated distributions
+        shell: pwsh
+        run: |
+          $out=Join-Path $env:WIN_TEST_ROOT 'release'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          # Native tar ZIP preserves files without PowerShell's 2 GB limitation.
+          Move-Item -LiteralPath (Join-Path $env:WIN_TEST_ROOT '搬家 Full package') -Destination (Join-Path $env:WIN_TEST_ROOT 'AI-Audio-Notes')
+          # Lite's installed junction must never include downloaded dependencies.
+          Remove-Item -LiteralPath (Join-Path $env:WIN_TEST_ROOT 'AI-Audio-Notes-Lite\node_modules\sherpa-onnx-win-x64') -Force
+          foreach($variant in @('lite','full')) {
+            $folder=if($variant -eq 'lite'){'AI-Audio-Notes-Lite'}else{'AI-Audio-Notes'}
+            tar.exe -a -cf (Join-Path $out "AI-Audio-Notes-v0.4.0-$variant-windows-x64.zip") -C $env:WIN_TEST_ROOT $folder
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          }
+          Get-ChildItem $out -Filter '*.zip' | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" } | Set-Content (Join-Path $out 'SHA256SUMS.txt') -Encoding utf8NoBOM
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: windows-release
+          path: ${{ env.WIN_TEST_ROOT }}/release/*
+          compression-level: 0
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-validation-evidence
+          path: |
+            ${{ env.WIN_TEST_ROOT }}/*-acceptance.json
+            ${{ env.WIN_TEST_ROOT }}/*-reuse.json
+            ${{ env.WIN_TEST_ROOT }}/*-launch.log
+            ${{ env.WIN_TEST_ROOT }}/cold-cache/environment.json
+          retention-days: 14
