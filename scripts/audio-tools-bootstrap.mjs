@@ -6,6 +6,7 @@ import {spawnSync} from 'node:child_process';
 export async function ensureAudioTools(root){
   const manifest=JSON.parse(await fs.readFile(path.join(root,'AUDIO_TOOLS_MANIFEST.json'),'utf8'));
   for(const [name,info] of Object.entries(manifest)){
+    if(process.env[info.binary==='ffmpeg'?'FFMPEG_PATH':'FFPROBE_PATH'])continue;
     const target=path.join(root,'node_modules',name);
     if(await fs.access(path.join(target,info.binary)).then(()=>true,()=>false))continue;
     console.log(`首次启动：正在准备 ${info.binary} 音频工具，请保持联网。`);

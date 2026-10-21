@@ -17,3 +17,7 @@ No personal API credentials, recordings, transcript history or private dictionar
 - CPython 3.11.17, distributed by Astral python-build-standalone: https://github.com/astral-sh/python-build-standalone/releases/tag/20261020 . Original runtime license files are retained.
 - PyTorch, TorchAudio, NumPy, SciPy, scikit-learn and other Python dependencies retain their licenses and notices in runtime/python/lib/python3.11/site-packages, including distribution metadata and license directories. Pinned versions are in requirements-speech.txt. Runtime provenance and checksums are in PYTHON_RUNTIME_MANIFEST.json.
 - Public CAM++ example WAVs are only downloaded for source tests with --test; they are not included in the user download package.
+
+## Lightweight bootstrap in v0.3.0
+
+The lightweight ZIP carries application code and a small pure-Python crcmod 1.7 wheel (MIT license retained in its metadata), avoiding a compiler requirement on clean Macs. It downloads only missing components from the pinned official Node, Astral Python, npm and model sources, and pinned Python requirements from PyPI. Download hashes are recorded in the runtime/model manifests. The full ZIP retains the runtime licenses and dependency notices described above.

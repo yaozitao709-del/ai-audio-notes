@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.0 — 2026-10-21
+
+- Add a lightweight bootstrap alongside the full Mac package.
+- Reuse compatible Node, Python packages, audio tools, native ASR components and checksum-matched model files.
+- Install missing Python packages in app-owned storage while preserving existing environments; cache and resume verified downloads.
+- Keep the repaired Paraformer + VAD/CAM++ pipeline unchanged for imports and recording finalization.
+
 ## v0.2.0 — 2026-10-21
 
 - Restore independent FSMN-VAD/CAM++ speaker diarization while retaining Paraformer transcription.

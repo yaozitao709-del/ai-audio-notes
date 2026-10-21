@@ -1,9 +1,9 @@
 import { spawn } from "node:child_process";
-import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
-import ffprobeInstaller from "@ffprobe-installer/ffprobe";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
 
-export const ffmpegPath = process.env.FFMPEG_PATH || ffmpegInstaller.path;
-export const ffprobePath = process.env.FFPROBE_PATH || ffprobeInstaller.path;
+export const ffmpegPath = process.env.FFMPEG_PATH || require("@ffmpeg-installer/ffmpeg").path;
+export const ffprobePath = process.env.FFPROBE_PATH || require("@ffprobe-installer/ffprobe").path;
 
 export async function probeAudioDuration(audioPath, { decodeIfUnknown = true } = {}) {
   const duration = await new Promise((resolve, reject) => {

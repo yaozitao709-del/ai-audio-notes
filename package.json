@@ -1,6 +1,6 @@
 {
   "name": "local-audio-minutes",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,7 +14,8 @@
     "stop": "node scripts/launcher.mjs stop",
     "setup:models": "node scripts/download-models.mjs",
     "bundle:server": "node scripts/bundle-server.mjs",
-    "setup:speakers": "node scripts/download-speaker-models.mjs"
+    "setup:speakers": "node scripts/download-speaker-models.mjs",
+    "test:installer": "node --test scripts/*.test.mjs"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "1.1.0",

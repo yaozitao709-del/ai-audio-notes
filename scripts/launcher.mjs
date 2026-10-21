@@ -23,7 +23,7 @@ async function start(){
   if(await owned(existing)){console.log(`AI 录音纪要已运行：http://127.0.0.1:${existing.port}`);await openPage(existing.port);return;}
   await new Promise((resolve,reject)=>{const probe=net.createServer();probe.once('error',()=>reject(new Error(`端口 ${port} 已被占用，请先关闭使用该端口的程序，再启动本软件。`)));probe.listen(port,'127.0.0.1',()=>probe.close(resolve));});
   if(!await exists(path.join(root,'dist/index.html')))throw new Error('缺少构建页面。源码用户请先执行 npm ci、npm run setup:models 和 npm run build；普通用户请下载完整 Mac ZIP。');
-  for(const file of ['encoder.int8.onnx','decoder.int8.onnx','tokens.txt'])if(!await exists(path.join(root,'models/paraformer-streaming',file)))throw new Error('快速语音模型缺失。请下载完整 Mac ZIP，或执行 npm run setup:models。');
+  for(const file of ['encoder.int8.onnx','decoder.int8.onnx','tokens.txt'])if(!await exists(path.join(process.env.PARAFORMER_MODEL_DIR || path.join(root,'models/paraformer-streaming'),file)))throw new Error('快速语音模型缺失。请下载完整 Mac ZIP，或执行 npm run setup:models。');
   const bundled=await exists(path.join(root,'BUNDLED_SERVER.json'));
   if((!bundled && !await exists(path.join(root,'node_modules/express/package.json'))) || !await exists(path.join(root,'node_modules/sherpa-onnx-darwin-arm64/package.json'))){
     throw new Error('运行依赖不完整。普通用户请下载完整 Mac ZIP；源码用户请先执行 npm ci。');

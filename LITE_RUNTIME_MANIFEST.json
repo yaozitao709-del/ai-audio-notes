@@ -1,0 +1,33 @@
+{
+  "version": "0.3.0",
+  "python": {
+    "version": "3.11.17",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261020/cpython-3.11.17%2B20261020-aarch64-apple-darwin-install_only.tar.gz",
+    "sha256": "b36ef2159678e88cfa91bc5047670352722c6a104111c7a7ba8b8b418ac29733"
+  },
+  "native": {
+    "name": "sherpa-onnx-darwin-arm64",
+    "version": "1.13.3",
+    "url": "https://registry.npmjs.org/sherpa-onnx-darwin-arm64/-/sherpa-onnx-darwin-arm64-1.13.3.tgz",
+    "integrity": "sha512-9x86Cbf+BDFONdtCPM3cnjvtAW0ER8tMaHK5pVfz+SHPt8GeuwRXaiR/BzcByFBUyxCgmceO09/WMZOCi44P/g==",
+    "files": {
+      "libsherpa-onnx-c-api.dylib": "96be27eb2a28c2aa06c332e1a4291a435f21dc2b17c25a5a33bdd2084596e8ca",
+      "index.js": "3f0b863d77823f79278c60fae2473c62f7009b2f73ad4541ead097b1c2ade995",
+      "libsherpa-onnx-cxx-api.dylib": "94b4ca685a48ce94483c99c40804284d0abf91d8ecd5f11ee6a9d00daa2f9ed6",
+      "sherpa-onnx.node": "fbb33070da4813995090cd67d6c029096ffc2dc7309cefc238508dd211393db5",
+      "README.md": "7404cc01ddc4bd97dd9722686b44944a5ca88c619cc263988da273e7e67e16d2",
+      "package.json": "2965e8bd767ae2e6c29f1bb34d37bce6f2e280955b4164e5c4031721d0740e77",
+      "libonnxruntime.dylib": "872533f130f1839a5bc01788ddb4f75c83a189763441ba1178788ed965449289",
+      "libonnxruntime.1.24.4.dylib": "872533f130f1839a5bc01788ddb4f75c83a189763441ba1178788ed965449289"
+    }
+  },
+  "portableWheels": [
+    {
+      "name": "crcmod",
+      "version": "1.7",
+      "filename": "crcmod-1.7-py3-none-any.whl",
+      "url": "https://github.com/yaozitao709-del/ai-audio-notes/releases/download/v0.3.0/crcmod-1.7-py3-none-any.whl",
+      "sha256": "f81128043ad072733753fe3f88ececeacd866ed92bad1b94af86e761a1b10c5c"
+    }
+  ]
+}

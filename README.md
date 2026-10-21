@@ -20,13 +20,29 @@
 
 ## 普通用户下载
 
-到 [Releases](https://github.com/yaozitao709-del/ai-audio-notes/releases/latest) 下载 **AI-Audio-Notes-v0.2.0-macos-arm64.zip**，不要下载 GitHub 自动生成的 Source code ZIP 来当安装包。
+到 [Releases](https://github.com/yaozitao709-del/ai-audio-notes/releases/latest) 选择一种 ZIP。不要把 GitHub 自动生成的 Source code ZIP 当作安装包。
 
-1. 完整解压到自己的电脑，保留整个文件夹。
-2. 双击 **启动AI录音纪要.command**。包内已带 Node.js、可迁移 Python 运行环境、Paraformer 快速模型及 VAD／CAM++ 分人模型，不需要自行安装 Homebrew、Python 或 Node.js。
-3. **第一次启动需要联网下载 FFmpeg/FFprobe 音频工具**；终端会显示进度。以后不会重复安装。浏览器自动打开本机页面。
-4. 点首页右上角 **AI 设置**，填写自己的 API Key。默认 DeepSeek Flash；高级设置支持兼容服务、自定义模型及“获取模型”列表。
-5. 测试连接、保存，之后即可导入音频或录音。双击 **关闭AI录音纪要.command** 停止后台。
+| 下载 | 适合谁 | 首次启动 |
+| --- | --- | --- |
+| **AI-Audio-Notes-v0.3.0-lite-macos-arm64.zip**（约 0.9 MB） | 希望小体积下载，或已有 Python / Node / 模型环境 | 自动检测并复用兼容组件，只补齐缺少或版本不符的部分 |
+| **AI-Audio-Notes-v0.3.0-full-macos-arm64.zip**（约 583 MB） | 希望自带已验证的推理环境，少处理依赖 | 已内置 Node、Python、Paraformer、VAD 和 CAM++；首次仍需联网准备音频工具 |
+
+两版使用同一套转写和分人方法，完整版本会继续保留。**轻量版的小体积指启动包本身；完全没有环境的电脑，首次需要下载的总量仍可能接近完整版。**
+
+1. 完整解压并保留整个文件夹。轻量版的文件夹名为 `AI-Audio-Notes-Lite`，完整版为 `AI-Audio-Notes`；放在同一目录时，轻量版也会检测完整版可复用的组件。
+2. 双击 **启动AI录音纪要.command**。轻量版会显示检测、复用和补装进度；缺少组件时需要联网，不要求自行安装 Homebrew、Node 或 Python。
+3. 网络中断后重新启动即可；已经校验通过的文件不会重复下载，未完成的下载会尝试续传。
+4. 浏览器打开后，点右上角 **AI 设置**，填写自己的 API Key。默认 DeepSeek Flash，也支持兼容服务和自定义模型。
+5. 双击 **关闭AI录音纪要.command** 停止后台。升级前先关闭旧版；原笔记保存在同一个 Application Support 目录中。
+
+### 轻量版如何复用环境
+
+- 自动检查 PATH、当前激活的 venv/Conda、常见 Homebrew/pyenv/Conda 位置、同目录或常见安装位置的完整版。
+- Node 需为 Apple Silicon 原生版本且版本不低于 26。Python 使用已验证的 **3.11 / arm64** 配置；依赖按 `requirements-speech.txt` 检测，并验证关键模块能加载。版本不符时只在应用自己的隔离环境中补装，不升级或卸载原环境。
+- 模型逐文件校验 SHA256；已有匹配文件会直接复用，不重新下载。音频工具还会检查常用录音格式支持。
+- 缺少的环境和模型放在 `~/Library/Application Support/AI Audio Notes/runtime-cache`。复用的外部环境被移动或卸载后，下一次启动会重新检测和补齐。
+- 自定义环境可通过 `SPEAKER_PYTHON` 指定 Python，通过 `AI_AUDIO_REUSE_DIRS` 指定其他应用目录（多个目录用冒号分隔），通过 `PARAFORMER_MODEL_DIR` / `SPEAKER_MODEL_ROOT` 指定模型位置。只检测这些明确位置和常见位置，不扫描整块磁盘。
+- `AI_AUDIO_NODE` 可指定 Node；`AI_AUDIO_CACHE_DIR` 可改变运行缓存位置。通常不需要设置这些参数。
 
 此包需要 **M 系列苹果芯片 Mac、macOS 14 Sonoma 或更新版本**；不包含 Intel Mac、Windows、Linux 运行包。它是脚本启动包，不是经过 Apple 签名公证的 DMG。macOS 首次询问是否打开时，请检查下载来源并使用系统提供的正常打开方式；不要关闭系统安全保护。
 
@@ -64,6 +80,7 @@ node scripts/download-models.mjs --test
 node scripts/download-speaker-models.mjs --test
 npm test
 npm run test:asr
+npm run test:installer
 npm run build
 ```
 
