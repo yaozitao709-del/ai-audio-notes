@@ -1,4 +1,4 @@
-import {packageSources} from './package-files.mjs';
+import {packageSources,copyablePackagePath} from './package-files.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -8,7 +8,7 @@ const [mode,output,cache]=process.argv.slice(2);
 if(process.platform!=='win32'||process.arch!=='x64')throw Error('Build Windows packages on Windows x64.');
 const parent=path.resolve(output),app=path.join(parent,mode==='lite'?'AI-Audio-Notes-Lite':'AI-Audio-Notes');
 await fs.mkdir(app,{recursive:true});
-const copy=async(src,dest)=>{await fs.mkdir(path.dirname(dest),{recursive:true});await fs.cp(src,dest,{recursive:true,dereference:true,filter:p=>!/(?:^|[\\/])(?:__pycache__|\.git)(?:[\\/]|$)|\.pyc$/.test(p)});};
+const copy=async(src,dest)=>{await fs.mkdir(path.dirname(dest),{recursive:true});await fs.cp(src,dest,{recursive:true,dereference:true,filter:copyablePackagePath});};
 if(mode==='lite'){
  const files=await packageSources(root);
  for(const name of files){

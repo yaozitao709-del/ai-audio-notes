@@ -84,6 +84,8 @@ jobs:
           # Lite's installed junction must never include downloaded dependencies.
           Remove-Item -LiteralPath (Join-Path $env:WIN_TEST_ROOT 'AI-Audio-Notes-Lite\node_modules\sherpa-onnx-win-x64') -Force
           foreach($tool in @('ffmpeg','ffprobe')) { Remove-Item -LiteralPath (Join-Path $env:WIN_TEST_ROOT "AI-Audio-Notes\node_modules\@$tool-installer\win32-x64") -Recurse -Force -ErrorAction SilentlyContinue }
+          node scripts/audit-package.mjs (Join-Path $env:WIN_TEST_ROOT 'AI-Audio-Notes-Lite') (Join-Path $env:WIN_TEST_ROOT 'AI-Audio-Notes')
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           Set-Location -LiteralPath $env:WIN_TEST_ROOT
           foreach($variant in @('lite','full')) {
             $folder=if($variant -eq 'lite'){'AI-Audio-Notes-Lite'}else{'AI-Audio-Notes'}
