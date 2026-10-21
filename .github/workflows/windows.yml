@@ -1,0 +1,17 @@
+name: Windows validation
+on:
+  push:
+    branches: [windows-support]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  platform:
+    runs-on: windows-2022
+    steps:
+      - name: Verify Windows runner
+        shell: pwsh
+        run: |
+          [System.Environment]::OSVersion.VersionString
+          node --version
+          python --version
