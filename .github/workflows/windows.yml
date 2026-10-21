@@ -4,7 +4,7 @@ on:
     branches: [windows-support]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   windows:
     runs-on: windows-2022
@@ -32,6 +32,12 @@ jobs:
           npm run build
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm run bundle:server
+          exit $LASTEXITCODE
+      - name: Verify Python path reuse on Windows
+        shell: pwsh
+        run: |
+          $python=py -3.11 -c 'import sys;print(sys.executable)'
+          node scripts/python-path-smoke.mjs $python
           exit $LASTEXITCODE
       - name: Build lite with app-local Microsoft runtime
         shell: pwsh
@@ -100,6 +106,34 @@ jobs:
           if ($links) { throw 'Full ZIP contains external links' }
           Set-Location -LiteralPath $env:GITHUB_WORKSPACE
           node scripts/windows-acceptance.mjs $env:WIN_TEST_ROOT full-zip $full
+          exit $LASTEXITCODE
+      - name: Upload tested packages to an unpublished draft release
+        if: success()
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $out=Join-Path $env:WIN_TEST_ROOT 'release'
+          $validation=@{
+            commit=$env:GITHUB_SHA
+            run="https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+            os=[Environment]::OSVersion.VersionString
+            image=$env:ImageVersion
+            results=@{}
+          }
+          Get-ChildItem -LiteralPath $env:WIN_TEST_ROOT -Filter '*-acceptance.json' | ForEach-Object { $validation.results[$_.Name]=Get-Content $_.FullName -Raw | ConvertFrom-Json }
+          Get-ChildItem -LiteralPath $env:WIN_TEST_ROOT -Filter '*-reuse.json' | ForEach-Object { $validation.results[$_.Name]=Get-Content $_.FullName -Raw | ConvertFrom-Json }
+          $validation | ConvertTo-Json -Depth 20 | Set-Content (Join-Path $out 'VALIDATION.json') -Encoding utf8NoBOM
+          $existing=gh release view v0.4.0 --repo $env:GITHUB_REPOSITORY --json isDraft 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            if (-not ($existing | ConvertFrom-Json).isDraft) { throw 'Refusing to replace an already published release' }
+            gh release edit v0.4.0 --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --notes-file RELEASE_NOTES_v0.4.0.md
+          } else {
+            gh release create v0.4.0 --repo $env:GITHUB_REPOSITORY --draft --target $env:GITHUB_SHA --title 'v0.4.0 — Windows x64 轻量版与完整版' --notes-file RELEASE_NOTES_v0.4.0.md
+          }
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $assets=@((Join-Path $out 'AI-Audio-Notes-v0.4.0-lite-windows-x64.zip'),(Join-Path $out 'AI-Audio-Notes-v0.4.0-full-windows-x64.zip'),(Join-Path $out 'SHA256SUMS.txt'),(Join-Path $out 'VALIDATION.json'))
+          gh release upload v0.4.0 --repo $env:GITHUB_REPOSITORY --clobber @assets
           exit $LASTEXITCODE
       - uses: actions/upload-artifact@v4
         if: success()
