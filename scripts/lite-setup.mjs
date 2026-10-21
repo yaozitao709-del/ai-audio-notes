@@ -4,7 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
 import {fileURLToPath} from 'node:url';
-import {choosePython,missingPackages,ensureFile,matches,extractTar,run,acquireLock} from './lite-runtime.mjs';
+import {choosePython,missingPackages,ensureFile,matches,extractTar,run,acquireLock,pythonPathFile} from './lite-runtime.mjs';
 
 const unique=items=>[...new Set(items.filter(Boolean))];
 const exists=p=>fs.access(p).then(()=>true,()=>false);
@@ -118,6 +118,8 @@ async function prepareAudio(app,cache,roots,env,report,log){
   return result;
 }
 export async function preparePython(app,cache,manifest,{env=process.env,candidates,report={reused:[],downloaded:[]},log=console.log}={}){
+  const isolated=env.AI_AUDIO_ISOLATED_PYTHON==='1';
+  if(isolated)candidates=[];
   const required=Object.fromEntries((await fs.readFile(path.join(app,platform.requirements),'utf8')).split('\n').filter(s=>s.trim()&&!s.startsWith('#')).map(s=>s.trim().split('==')));
   const penv=pythonEnv(env,cache),reports=[];
   for(const candidate of candidates){
@@ -139,14 +141,17 @@ export async function preparePython(app,cache,manifest,{env=process.env,candidat
     best=choosePython(required,[await probePython(python,app,penv)]);if(!best)throw new Error('下载的 Python 未通过验证。');
   }
   const owned=path.join(cache,'speech-env'),python=path.join(owned,platform.venvPython);
-  if(!await probePython(python,app,penv)){
+  const ownedProbe=await probePython(python,app,penv);
+  const wrongBase=isolated && ownedProbe && await fs.realpath(ownedProbe.basePrefix)!==await fs.realpath(best.prefix);
+  if(!ownedProbe || wrongBase){
     // All package installation happens in this app-owned venv, never in best.executable.
     if(await exists(owned))await fs.rename(owned,owned+'.incomplete-'+Date.now());
     await run(best.executable,['-B','-m','venv',owned],{env:penv,timeout:120000});
     const sitePackages=(await probePython(python,app,penv)).sitePackages;
     const paths=best.sitePaths.filter(p=>!p.includes('\n')&&!p.startsWith(owned));
-    await fs.writeFile(path.join(sitePackages,'audio-notes-existing-env.pth'),paths.join('\n')+'\n');
+    if(!isolated)await fs.writeFile(path.join(sitePackages,'audio-notes-existing-env.pth'),pythonPathFile(paths));
   }
+  if(isolated){const own=await probePython(python,app,penv);await fs.rm(path.join(own.sitePackages,'audio-notes-existing-env.pth'),{force:true});}
   await copyVc(app,path.dirname(python));
   let current=await probePython(python,app,penv);if(!current || await fs.realpath(current.prefix)!==await fs.realpath(owned))throw new Error('拒绝向非应用目录安装 Python 依赖。');
   const missing=missingPackages(required,current.packages);

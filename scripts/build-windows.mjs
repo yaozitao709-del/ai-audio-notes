@@ -30,6 +30,7 @@ if(mode==='lite'){
  await fs.rm(path.join(app,'node_modules', 'sherpa-onnx-win-x64'),{recursive:true,force:true});
  await copy(path.join(cache,'native/sherpa-onnx-win-x64-1.13.3'),path.join(app,'node_modules/sherpa-onnx-win-x64'));
  await copy(path.join(cache,'python-standalone/python'),path.join(app,'runtime/python'));
+ await fs.rm(path.join(app,'runtime/python/Lib/site-packages'),{recursive:true,force:true});
  await copy(path.join(cache,'speech-env/Lib/site-packages'),path.join(app,'runtime/python/Lib/site-packages'));
  await fs.rm(path.join(app,'runtime/python/Lib/site-packages/audio-notes-existing-env.pth'),{force:true});
  await copy(path.join(cache,'node-v26.11.1-win-x64/node.exe'),path.join(app,'runtime/node.exe'));

@@ -62,3 +62,12 @@ test('extract tar archives under Chinese user directories',async t=>{
  await extractTar(path.join(dir,'fixture.tar.gz'),path.join(dir,'unpacked'),{strip:1});
  assert.equal(await fs.readFile(path.join(dir,'unpacked/value.txt'),'utf8'),'verified archive');
 });
+
+test('Python shared paths remain ASCII while preserving Unicode and quoted directory names',async()=>{
+ const {pythonPathFile}=await import('./lite-runtime.mjs');
+ const paths=['C:\\用户\\音频 files', 'D:\\quotes"and emoji 😀'];
+ const value=pythonPathFile(paths);assert.ok([...value].every(c=>c.charCodeAt(0)<128));
+ // The outer string is a Python-compatible JSON string literal; inner JSON owns Unicode decoding.
+ const argument=value.slice(value.indexOf('json.loads(')+11,-3);
+ assert.deepEqual(JSON.parse(JSON.parse(argument)),paths);
+});

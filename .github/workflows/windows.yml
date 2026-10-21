@@ -85,6 +85,22 @@ jobs:
             if ($LASTEXITCODE) { exit $LASTEXITCODE }
           }
           Get-ChildItem $out -Filter '*.zip' | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" } | Set-Content (Join-Path $out 'SHA256SUMS.txt') -Encoding utf8NoBOM
+      - name: Validate extracted full ZIP with original runtimes unavailable
+        shell: pwsh
+        run: |
+          Set-Location -LiteralPath $env:WIN_TEST_ROOT
+          Move-Item -LiteralPath 'cold-cache' -Destination 'cold-cache-hidden'
+          Move-Item -LiteralPath 'AI-Audio-Notes-Lite' -Destination 'lite-hidden'
+          Move-Item -LiteralPath 'AI-Audio-Notes' -Destination 'original-full-hidden'
+          New-Item -ItemType Directory -Path 'fresh-extraction' | Out-Null
+          tar.exe -xf 'release/AI-Audio-Notes-v0.4.0-full-windows-x64.zip' -C 'fresh-extraction'
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $full=Join-Path $env:WIN_TEST_ROOT 'fresh-extraction\AI-Audio-Notes'
+          $links=Get-ChildItem -LiteralPath $full -Recurse -Attributes ReparsePoint
+          if ($links) { throw 'Full ZIP contains external links' }
+          Set-Location -LiteralPath $env:GITHUB_WORKSPACE
+          node scripts/windows-acceptance.mjs $env:WIN_TEST_ROOT full-zip $full
+          exit $LASTEXITCODE
       - uses: actions/upload-artifact@v4
         if: success()
         with:

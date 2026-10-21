@@ -74,3 +74,9 @@ export async function extractTar(archive,destination,{strip=0}={}){
   try{await run(systemTool('tar'),['-xzf',archiveName,'-C',path.relative(cwd,temporary),...(strip?['--strip-components='+strip]:[])],{cwd});await fs.rm(destination,{recursive:true,force:true});await fs.rename(temporary,destination);}
   finally{await fs.rm(temporary,{recursive:true,force:true});}
 }
+// Python 3.11 reads .pth using the Windows locale even with PYTHONUTF8=1.
+// Keep the file ASCII; let JSON decode Unicode paths after startup.
+export function pythonPathFile(paths){
+  const encoded=JSON.stringify(paths).replace(/[^\x00-\x7f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
+  return 'import sys, json; sys.path.extend(json.loads('+JSON.stringify(encoded)+'))\n';
+}
